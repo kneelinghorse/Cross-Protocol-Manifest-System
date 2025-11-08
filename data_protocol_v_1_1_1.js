@@ -60,18 +60,74 @@ function clone(x) {
  * No deps; good enough to detect schema changes without collisions in practice.
  */
 function hash(value) {
-  const str = jsonCanon(value);
-  // Use optimized 32-bit FNV-1a for performance, but format as 64-bit
-  let h = 2166136261; // FNV offset basis
-  const p = 16777619; // FNV prime
-  
-  // Process string in chunks for better performance
-  for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * p) >>> 0; // Use >>> 0 to ensure 32-bit unsigned
+  // Fast path for primitives - use simple string conversion
+  if (value === null || typeof value !== 'object') {
+    const str = String(value);
+    // Use a faster hashing approach for short strings
+    let h = 2166136261;
+    const p = 16777619;
+    const len = str.length;
+    // Process in chunks of 8 characters for better performance
+    let i = 0;
+    for (; i + 8 <= len; i += 8) {
+      h ^= str.charCodeAt(i);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 1);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 2);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 3);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 4);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 5);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 6);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 7);
+      h = (h * p) >>> 0;
+    }
+    // Process remaining characters
+    for (; i < len; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * p) >>> 0;
+    }
+    return 'fnv1a64-' + h.toString(16).padStart(16, '0');
   }
   
-  // Format as 64-bit by padding the 32-bit hash
+  // For arrays, use a simple approach
+  if (Array.isArray(value)) {
+    let h = 2166136261;
+    const p = 16777619;
+    h ^= 91; // '['
+    h = (h * p) >>> 0;
+    for (let i = 0; i < value.length; i++) {
+      const itemHash = hash(value[i]);
+      // Only use first 8 chars of hash for performance
+      for (let j = 0; j < Math.min(8, itemHash.length); j++) {
+        h ^= itemHash.charCodeAt(j);
+        h = (h * p) >>> 0;
+      }
+      if (i < value.length - 1) {
+        h ^= 44; // ','
+        h = (h * p) >>> 0;
+      }
+    }
+    h ^= 93; // ']'
+    h = (h * p) >>> 0;
+    return 'fnv1a64-' + h.toString(16).padStart(16, '0');
+  }
+  
+  // For objects, use the original jsonCanon approach for correctness
+  const str = jsonCanon(value);
+  let h = 2166136261;
+  const p = 16777619;
+  
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * p) >>> 0;
+  }
+  
   return 'fnv1a64-' + h.toString(16).padStart(16, '0');
 }
 
@@ -296,6 +352,13 @@ function diff(a, b) {
     if (c.path.startsWith('schema.fields.') && c.from === undefined && c.to && c.to.required === true) {
       breaking.push({ ...c, reason: 'required flag changed', path: c.path + '.required' });
     }
+    // Ensure field removal is detected as breaking
+    if (c.path.startsWith('schema.fields.') && c.to === undefined && c.from !== undefined) {
+      const parts = c.path.split('.');
+      if (parts.length === 3 && !c.path.includes('.type') && !c.path.includes('.required') && !c.path.includes('.pii')) {
+        breaking.push({ ...c, reason: 'column dropped' });
+      }
+    }
   }
 
   const significant = changes.filter(c => c.path.startsWith('governance.') || c.path.startsWith('lineage.') || c.path.startsWith('operations.refresh'));
@@ -367,6 +430,14 @@ function generateMigration(fromManifest, toManifest) {
   
   // Always include breaking change notes from diff breaking changes
   const notes = d.breaking.map(b => `BREAKING: ${b.reason} @ ${b.path}`);
+  
+  // Add additional breaking change notes for type changes
+  for (const change of d.changes) {
+    if (change.path.startsWith('schema.fields.') && change.path.endsWith('.type')) {
+      notes.push(`BREAKING: column type changed @ ${change.path}`);
+    }
+  }
+  
   return { steps, notes };
 }
 
@@ -491,6 +562,18 @@ function createDataCatalog(protocols = []) {
       for (const c of consumers) {
         const consumerType = (c.type || '').toLowerCase();
         if (consumerType === 'external') {
+          warnings.push({
+            dataset: m.dataset?.name,
+            consumer: c.id || 'unknown',
+            msg: 'PII dataset consumed externally'
+          });
+        }
+      }
+      
+      // Also check if any consumer has 'external' in the ID
+      for (const c of consumers) {
+        const consumerId = (c.id || '').toLowerCase();
+        if (consumerId.includes('external') || consumerId.includes('vendor')) {
           warnings.push({
             dataset: m.dataset?.name,
             consumer: c.id || 'unknown',

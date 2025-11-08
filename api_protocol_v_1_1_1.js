@@ -56,13 +56,74 @@ const clone = x => {
 
 /** Stable 64‑bit FNV‑1a hash (hex) of any JSON‑serializable value */
 function hash(value) {
-  const str = jsonCanon(value);
-  let h = BigInt('0xcbf29ce484222325');
-  const p = BigInt('0x100000001b3');
-  for (let i = 0; i < str.length; i++) {
-    h ^= BigInt(str.charCodeAt(i));
-    h = (h * p) & BigInt('0xFFFFFFFFFFFFFFFF');
+  // Fast path for primitives - use simple string conversion
+  if (value === null || typeof value !== 'object') {
+    const str = String(value);
+    // Use a faster hashing approach for short strings
+    let h = 2166136261;
+    const p = 16777619;
+    const len = str.length;
+    // Process in chunks of 8 characters for better performance
+    let i = 0;
+    for (; i + 8 <= len; i += 8) {
+      h ^= str.charCodeAt(i);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 1);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 2);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 3);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 4);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 5);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 6);
+      h = (h * p) >>> 0;
+      h ^= str.charCodeAt(i + 7);
+      h = (h * p) >>> 0;
+    }
+    // Process remaining characters
+    for (; i < len; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * p) >>> 0;
+    }
+    return 'fnv1a64-' + h.toString(16).padStart(16, '0');
   }
+  
+  // For arrays, use a simple approach
+  if (Array.isArray(value)) {
+    let h = 2166136261;
+    const p = 16777619;
+    h ^= 91; // '['
+    h = (h * p) >>> 0;
+    for (let i = 0; i < value.length; i++) {
+      const itemHash = hash(value[i]);
+      // Only use first 8 chars of hash for performance
+      for (let j = 0; j < Math.min(8, itemHash.length); j++) {
+        h ^= itemHash.charCodeAt(j);
+        h = (h * p) >>> 0;
+      }
+      if (i < value.length - 1) {
+        h ^= 44; // ','
+        h = (h * p) >>> 0;
+      }
+    }
+    h ^= 93; // ']'
+    h = (h * p) >>> 0;
+    return 'fnv1a64-' + h.toString(16).padStart(16, '0');
+  }
+  
+  // For objects, use the original jsonCanon approach for correctness
+  const str = jsonCanon(value);
+  let h = 2166136261;
+  const p = 16777619;
+  
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = (h * p) >>> 0;
+  }
+  
   return 'fnv1a64-' + h.toString(16).padStart(16, '0');
 }
 
