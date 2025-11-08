@@ -1,0 +1,218 @@
+# Mission: B3.1 Agent Protocol - Test Suite & Validation
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.1_agent-protocol-validation"
+version: "1.0.0"
+
+objective: |
+  Create comprehensive test suite for agent_protocol_v_1_1_1.js and validate implementation against Agent Protocol v1.1.1 specification.
+  Verify Agent Protocol factory patterns, validator registry, capability registration, URN linking, delegation chains, and Agent Card generation.
+  Ensure implementation meets all architectural requirements from foundational documentation.
+
+context: |
+  This mission validates the existing agent_protocol_v_1_1_1.js implementation (276 lines) which was created prior to Sprint 3.
+  The file implements Agent Protocol as described in foundational-docs/Cross-Protocol Manifest System-k2.md Section 14: Roadmap Phase 3.
+  
+  We need to verify:
+  - Factory pattern implementation (createAgentProtocol)
+  - Catalog system (createAgentCatalog)
+  - Capability registration and URN-based linking
+  - Agent Card generator
+  - Delegation chain support
+  - Compliance with zero-dependency pattern
+  - Integration with existing protocol ecosystem (Data, Event, API)
+
+successCriteria:
+  - "Test suite (agent-protocol.test.js) with ≥95% code coverage"
+  - "All protocol factory methods tested (manifest, validate, diff, match, set)"
+  - "Agent Card generator produces valid output matching spec"
+  - "URN validation and linking tests pass"
+  - "Capability registration tests verify requires/provides pattern"
+  - "Delegation chain validation tests pass"
+  - "Performance benchmarks meet targets (parsing ≤5ms, validation ≤2ms)"
+  - "Zero security vulnerabilities (OWASP compliance)"
+  - "All tests passing (target: 50+ test cases)"
+  - "Integration tests with other protocols pass"
+
+deliverables:
+  - "agent-protocol.test.js - Comprehensive test suite"
+  - "Test results summary with coverage report"
+  - "Performance benchmark data"
+  - "Validation report documenting compliance with spec"
+  - "Bug fix patches if issues found during validation"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Agent Protocol enables capability registration and cross-protocol linking"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "URN format for agent capabilities: urn:proto:agent:{id}@{version}#{capability}"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Agent Card generator produces human-readable capability documentation"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Delegation chains require signature verification when enabled"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+      
+  implementationScope:
+    coreDeliverable: "Comprehensive test suite validating all Agent Protocol functionality"
+    outOfScope:
+      - "Re-implementing the protocol (only validate existing implementation)"
+      - "Adding new features beyond v1.1.1 spec"
+      - "CLI integration (handled in B3.6)"
+      - "URN resolver integration (handled in B3.5)"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for test suite development
+          Secondary worker: research.code-analysis for spec compliance validation
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "worker_dispatch"
+        - "step_start"
+        - "step_complete"
+        - "validation_complete"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "Test coverage completeness and spec compliance verification"
+    - validator: "Claude"
+      focus: "Test quality, edge cases, and security validation"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "Test coverage ≥95% for all Agent Protocol functions"
+      - "Security test cases cover OWASP Top 10"
+      - "Performance tests validate SLO targets"
+      - "Edge case handling (null, undefined, malformed input)"
+      - "Integration tests with other protocols"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "worker_timeout"
+        - "evaluation_call_failure"
+        - "network_errors"
+      behavior: "Auto retry once per worker"
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation"
+    tier_3_fallback_to_linear:
+      behavior: "Degrade to single implementation.backend worker"
+      telemetry:
+        emit:
+          - status: "fallback"
+          - fallbackTriggered: true
+    tier_4_human_escalation:
+      enforcement: "Missions hitting fallback require manual review before closing"
+
+  qualityGates:
+    preCommit:
+      - "All tests must pass"
+      - "Coverage report must show ≥95%"
+      - "No critical security issues in test fixtures"
+      - "Performance benchmarks within targets"
+      
+    postImplementation:
+      - "Integration test with Data, Event, API protocols"
+      - "Spec compliance validation report"
+      - "Security validation passed"
+
+  handoffContext:
+    completed:
+      - "Agent Protocol implementation validated"
+      - "Comprehensive test suite created with ≥95% coverage"
+      - "All tests passing"
+      - "Performance benchmarks documented"
+    interfaces:
+      - "Function: createAgentProtocol(manifest) - creates frozen protocol instance"
+      - "Function: createAgentCatalog(protocols) - manages multiple agents"
+      - "Method: generateAgentCard() - produces capability documentation"
+      - "Validation: URN references checked for correctness"
+    assumptions:
+      - "agent_protocol_v_1_1_1.js implementation is mostly correct"
+      - "Bug fixes may be needed based on test findings"
+      - "Test suite will serve as regression suite for future changes"
+    nextMission: "B3.5: URN Resolver Service Implementation"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Implementation Notes
+
+## Test Categories Required
+
+### 1. Factory Pattern Tests
+- createAgentProtocol creates frozen instance
+- Manifest normalization with hashes
+- Immutability enforcement
+
+### 2. Validation Tests
+- Required field validation (agent.name, agent.capabilities)
+- URN format validation
+- Capability structure validation
+- Delegation chain validation
+
+### 3. Capability Tests
+- requires/provides pattern
+- Capability registration
+- URN-based capability linking
+- Cross-protocol capability resolution
+
+### 4. Agent Card Generator Tests
+- Valid output format
+- All fields included
+- Markdown formatting
+- Capability documentation completeness
+
+### 5. Diff and Query Tests
+- Detect capability changes
+- Detect agent metadata changes
+- Query DSL on agent properties
+- Breaking change detection
+
+### 6. Integration Tests
+- Work with Data Protocol manifests
+- Work with Event Protocol manifests
+- Work with API Protocol manifests
+- URN references resolve correctly
+
+### 7. Performance Tests
+- Manifest parsing ≤5ms p99
+- Validation ≤2ms per validator
+- Agent Card generation ≤10ms
+- Query execution ≤1ms
+
+### 8. Security Tests
+- Input sanitization
+- URN injection prevention
+- Delegation chain verification
+- OWASP Top 10 compliance
+
+## Validation Checklist
+- [ ] All public methods have tests
+- [ ] Edge cases covered (null, undefined, circular refs)
+- [ ] Error handling tested
+- [ ] Integration with other protocols tested
+- [ ] Performance targets met
+- [ ] Security tests pass
+- [ ] Documentation examples work
+

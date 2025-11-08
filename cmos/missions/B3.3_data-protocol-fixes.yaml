@@ -1,0 +1,206 @@
+# Mission: B3.3 Data Protocol - Fix Test Failures
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.3_data-protocol-fixes"
+version: "1.0.0"
+
+objective: |
+  Fix 10 failing tests in data-protocol.test.js to achieve 100% test passage (currently 43/53 passing).
+  Address PII detection accuracy (4 failures), migration generation (3 failures), breaking change detection (2 failures),
+  and catalog PII egress warning (1 failure). Maintain performance and existing functionality.
+
+context: |
+  The Data Protocol implementation (data_protocol_v_1_1_1.js) was completed in Sprint 1 (Mission B1.2) with 43/53 tests passing.
+  The 10 failing tests represent edge cases and integration scenarios that need fixes:
+  
+  PII Detection Issues (4 tests):
+  - PII detection: identifies email fields
+  - PII detection: identifies name fields  
+  - PII detection: identifies SSN fields
+  - PII detection: 100% accuracy - no false negatives
+  
+  Migration Generation Issues (3 tests):
+  - generateMigration: generates DROP COLUMN for removed fields
+  - generateMigration: includes breaking change notes
+  - diff: detects required field addition
+  
+  Breaking Change Detection (2 tests):
+  - breaking change detection: 100% accuracy for schema changes (field removal)
+  - (included in migration generation tests above)
+  
+  Catalog Integration (1 test):
+  - createDataCatalog: detects PII egress warnings
+
+successCriteria:
+  - "All 53 data protocol tests passing (0 failures)"
+  - "PII detection: 100% accuracy for email, name, SSN, phone fields"
+  - "Migration generation: DROP COLUMN statements generated correctly"
+  - "Migration generation: Breaking changes properly noted in output"
+  - "Breaking change detection: Field removal flagged as breaking=true"
+  - "Catalog PII egress: Warnings detected when PII crosses consumer boundaries"
+  - "No regression in currently passing tests (43 tests)"
+  - "Performance targets maintained (parsing ≤5ms, diff ≤10ms)"
+  - "Zero external dependencies maintained"
+
+deliverables:
+  - "Fixed data-protocol implementation (data_protocol_v_1_1_1.js)"
+  - "Test results showing 53/53 passing"
+  - "Regression test report confirming no breakage"
+  - "Performance benchmark comparison (before/after)"
+  - "Code review notes documenting fixes"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "PII detection critical for governance and compliance"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Breaking change detection prevents accidental API breaks"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Migration generation enables automated schema evolution"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+      
+  implementationScope:
+    coreDeliverable: "Fixes to data-protocol implementation for 10 failing tests"
+    outOfScope:
+      - "Adding new features beyond v1.1.1 spec"
+      - "Performance optimizations beyond maintaining current levels"
+      - "Refactoring unrelated code"
+      - "Breaking API changes"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: false
+      rsip:
+        enabled: false
+      boomerang:
+        enabled: false
+    validationRules:
+      - "Bug fix mission uses linear execution for focused debugging"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "step_start"
+        - "step_complete"
+        - "test_run"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "PII detection logic correctness and security implications"
+    - validator: "Claude"
+      focus: "Migration generation logic and breaking change detection"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "All test fixes maintain backward compatibility"
+      - "PII detection uses proper regex and field analysis"
+      - "Migration logic correctly identifies schema changes"
+      - "Breaking change heuristics are sound"
+      - "No security regressions introduced"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "test_flakiness"
+      behavior: "Auto retry once"
+    tier_4_human_escalation:
+      enforcement: "If fixes cause regression, manual review required"
+
+  qualityGates:
+    preCommit:
+      - "All 53 tests must pass"
+      - "No regression in existing functionality"
+      - "Performance benchmarks within acceptable range"
+      - "Security validation passed"
+      
+    postImplementation:
+      - "Integration test with catalog system"
+      - "Cross-protocol test with Event and API protocols"
+      - "PII governance validation"
+
+  handoffContext:
+    completed:
+      - "All 10 failing tests now passing"
+      - "53/53 tests passing for Data Protocol"
+      - "PII detection accuracy: 100%"
+      - "Migration generation working correctly"
+    interfaces:
+      - "All existing Data Protocol interfaces maintained"
+      - "No breaking changes to API"
+    assumptions:
+      - "Test failures are implementation bugs, not test bugs"
+      - "Fixes will not require protocol redesign"
+    nextMission: "B3.7: Integration Tests & Documentation"
+    blockers: []
+    researchRequired: false
+    dependencies:
+      - "B3.1_agent-protocol-validation (sequential dependency)"
+
+---
+
+# Implementation Notes
+
+## Failing Test Analysis
+
+### PII Detection Failures (4 tests)
+**Root Cause**: PII field validation not properly checking field types and names
+
+**Fix Strategy**:
+- Enhance PII detection regex/logic
+- Check field name patterns: email, ssn, phone, address
+- Check field type annotations: pii=true flag
+- Validate against governance.policy.classification
+
+**Test Cases**:
+- Email fields: user_email, email, contact_email
+- Name fields: first_name, last_name, full_name, name
+- SSN fields: ssn, social_security_number, tax_id
+- Ensure no false negatives
+
+### Migration Generation Failures (3 tests)
+**Root Cause**: DROP COLUMN logic not implemented in generateMigration()
+
+**Fix Strategy**:
+- Detect removed fields in diff
+- Generate DROP COLUMN statements
+- Add breaking change warnings
+- Note required field additions as potentially breaking
+
+**Test Cases**:
+- Field removal generates DROP COLUMN
+- Breaking changes noted in migration output
+- Required field additions flagged
+
+### Breaking Change Detection (2 tests)
+**Root Cause**: Field removal not flagged as breaking in diff.breaking array
+
+**Fix Strategy**:
+- Update diff() logic to mark field removals as breaking
+- Ensure breaking flag set correctly
+- Add to diff.breaking[] array
+
+### Catalog PII Egress (1 test)
+**Root Cause**: Catalog not detecting PII flowing to external consumers
+
+**Fix Strategy**:
+- Implement piiEgressWarnings() in catalog
+- Detect PII datasets consumed by external consumers
+- Check consumer.external flag
+- Generate appropriate warnings
+
+## Testing Approach
+1. Run tests individually to isolate failures
+2. Fix one category at a time
+3. Run full suite after each fix
+4. Verify no regressions
+5. Performance benchmark before/after
+

@@ -1,0 +1,284 @@
+# Mission: B3.5 URN Resolver Service Implementation
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.5_urn-resolver"
+version: "1.0.0"
+
+objective: |
+  Implement URN Resolver Service for cross-protocol manifest discovery and validation.
+  Support static file resolution and optional serverless deployment. Enable URN-based linking between
+  Data, Event, API, Agent, and Semantic protocols with existence checks and compatibility validation.
+
+context: |
+  As described in foundational-docs/Cross-Protocol Manifest System-k2.md Section 14 (Phase 3),
+  the URN Resolver Service enables discovery and validation of cross-protocol manifest references.
+  
+  URN Format: urn:proto:{type}:{id}@{version}#{fragment}
+  Examples:
+  - urn:proto:data:user_events@v1.1.1#schema.fields.email
+  - urn:proto:api:billing@v2.0.0#endpoints./v1/charge
+  - urn:proto:agent:support@v1.0.0#capabilities.refund
+  
+  The resolver enables:
+  - URN existence checking (does manifest exist?)
+  - Version compatibility validation
+  - Fragment resolution (deep linking into manifests)
+  - Cross-protocol relationship mapping
+  - Static file-based or HTTP-based resolution
+
+successCriteria:
+  - "URN resolver service operational (urn-resolver.js)"
+  - "Supports all protocol types: data, event, api, agent, semantic"
+  - "Static file resolution from local manifest directory"
+  - "URN validation: existence checking for referenced manifests"
+  - "URN validation: compatibility checking (version matching)"
+  - "Fragment resolution: deep linking to specific manifest fields"
+  - "Cross-protocol relationship mapping"
+  - "Optional HTTP server for remote resolution"
+  - "Test suite with ≥95% coverage"
+  - "Performance: resolution ≤10ms per URN"
+  - "Integration with existing catalog system"
+
+deliverables:
+  - "urn-resolver.js - Core URN resolver implementation"
+  - "urn-resolver.test.js - Comprehensive test suite"
+  - "urn-server.js - Optional HTTP server for remote resolution"
+  - "Usage documentation and examples"
+  - "Integration guide for catalog system"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "URN-based linking enables loose coupling between protocols"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Static file resolution for local development, HTTP for production"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "URN format: urn:proto:{type}:{id}@{version}#{fragment}"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+      
+  implementationScope:
+    coreDeliverable: "URN resolver with static and HTTP resolution modes"
+    outOfScope:
+      - "Vector database integration"
+      - "Distributed URN registry"
+      - "Blockchain-based URN resolution"
+      - "Advanced caching beyond in-memory"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for resolver implementation
+          Secondary worker: research.code-analysis for URN parsing validation
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "worker_dispatch"
+        - "step_complete"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "URN parsing correctness and edge case handling"
+    - validator: "Claude"
+      focus: "Resolution logic and performance optimization"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "URN parsing follows RFC-style URN specification"
+      - "Resolution handles missing manifests gracefully"
+      - "Performance meets ≤10ms target"
+      - "HTTP server follows REST conventions"
+      - "Integration with catalog system validated"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "file_not_found"
+        - "network_timeout"
+      behavior: "Auto retry once"
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation"
+
+  qualityGates:
+    preCommit:
+      - "All URN parsing tests pass"
+      - "Resolution works for all protocol types"
+      - "Performance benchmarks within target"
+      - "HTTP server tests pass"
+      
+    postImplementation:
+      - "Integration test with all 5 protocol types"
+      - "Catalog system integration validated"
+      - "CLI integration tested"
+
+  handoffContext:
+    completed:
+      - "URN resolver service operational"
+      - "Static and HTTP resolution modes working"
+      - "Integration with catalog system complete"
+    interfaces:
+      - "Function: parseURN(urnString) - parses URN into components"
+      - "Function: resolveURN(urn, options) - resolves URN to manifest"
+      - "Function: validateURN(urn) - checks URN existence and compatibility"
+      - "Class: URNResolver with sync/async resolution"
+      - "HTTP API: GET /resolve?urn={urn}"
+    assumptions:
+      - "Manifests stored in known directory structure"
+      - "HTTP mode optional for production"
+    nextMission: "B3.6: CLI Query & Graph Commands"
+    blockers: []
+    researchRequired: false
+    dependencies:
+      - "B3.1_agent-protocol-validation (requires)"
+      - "B3.2_semantic-protocol-validation (requires)"
+
+---
+
+# Implementation Notes
+
+## URN Format Specification
+
+**Structure**: `urn:proto:{type}:{id}@{version}#{fragment}`
+
+**Components**:
+- `proto` - Protocol namespace (fixed)
+- `{type}` - Protocol type: data, event, api, agent, semantic
+- `{id}` - Manifest identifier (alphanumeric, dots, dashes)
+- `{version}` - Semantic version (optional)
+- `{fragment}` - Path into manifest (optional)
+
+**Examples**:
+```
+urn:proto:data:user_events@v1.1.1
+urn:proto:api:billing@v2.0.0#endpoints./v1/charge
+urn:proto:agent:support#capabilities.refund
+```
+
+## Core Functions
+
+### 1. parseURN(urnString)
+```javascript
+function parseURN(urnString) {
+  const regex = /^urn:proto:(data|event|api|agent|semantic):([a-zA-Z0-9._-]+)(?:@([\d.]+))?(?:#(.+))?$/;
+  const match = urnString.match(regex);
+  if (!match) throw new Error('Invalid URN format');
+  
+  return {
+    type: match[1],
+    id: match[2],
+    version: match[3] || 'latest',
+    fragment: match[4] || null
+  };
+}
+```
+
+### 2. resolveURN(urn, options)
+```javascript
+async function resolveURN(urn, options = {}) {
+  const { type, id, version, fragment } = parseURN(urn);
+  
+  // Static file resolution
+  if (options.mode === 'static') {
+    const manifest = await loadManifestFromFile(type, id, version);
+    if (fragment) {
+      return dget(manifest, fragment);
+    }
+    return manifest;
+  }
+  
+  // HTTP resolution
+  if (options.mode === 'http') {
+    const url = `${options.baseUrl}/resolve?urn=${encodeURIComponent(urn)}`;
+    const response = await fetch(url);
+    return await response.json();
+  }
+}
+```
+
+### 3. validateURN(urn)
+```javascript
+function validateURN(urn) {
+  try {
+    const parsed = parseURN(urn);
+    const manifest = resolveURN(urn);
+    
+    return {
+      valid: true,
+      exists: !!manifest,
+      compatible: checkVersionCompatibility(parsed.version, manifest.version)
+    };
+  } catch (error) {
+    return { valid: false, exists: false, error: error.message };
+  }
+}
+```
+
+## Directory Structure
+
+```
+manifests/
+  data/
+    user_events@v1.1.1.json
+    transactions@v2.0.0.json
+  event/
+    payment.received@v1.0.0.json
+  api/
+    billing@v2.0.0.json
+  agent/
+    support@v1.0.0.json
+  semantic/
+    ...
+```
+
+## HTTP API
+
+**Endpoint**: `GET /resolve`
+
+**Parameters**:
+- `urn` - URN to resolve (required)
+- `format` - Response format: json, yaml (default: json)
+
+**Response**:
+```json
+{
+  "urn": "urn:proto:data:user_events@v1.1.1",
+  "manifest": { ... },
+  "metadata": {
+    "resolved_at": "2025-11-08T...",
+    "cache_hit": false
+  }
+}
+```
+
+## Performance Targets
+- Static resolution: ≤5ms
+- HTTP resolution: ≤10ms
+- Cache hit: ≤1ms
+- Batch resolution: ≤20ms for 10 URNs
+
+## Test Categories
+1. URN parsing tests
+2. Static file resolution tests
+3. HTTP resolution tests
+4. Fragment resolution tests
+5. Version compatibility tests
+6. Error handling tests
+7. Performance tests
+8. Integration tests
+

@@ -1,0 +1,391 @@
+# Mission: B1.2 Data Protocol Implementation
+# Sprint: Sprint 1 - Phase 1 Foundation & Data Protocol
+# Depends on: B1.1_core-foundation
+
+missionId: "B1.2_data-protocol"
+version: "1.0.0"
+
+objective: |
+  Implement Data Protocol v1.1.1 with immutable factory pattern, validation engine, diff computation,
+  migration generator, and query engine. This mission builds upon the foundation utilities from B1.1
+  to create the first working protocol implementation that demonstrates the manifest-first architecture.
+
+context: |
+  This mission implements the Data Protocol as described in foundational-docs/Cross-Protocol Manifest System-k2.md
+  Section 3: Core Components - Protocol Factories and Section 4: Primary Interface/API.
+  
+  The Data Protocol provides a declarative way to define datasets, their schemas, governance policies,
+  and lifecycle information. It enables automated validation, diffing, migration generation, and
+  compliance checking for data contracts.
+  
+  Key capabilities:
+  - Immutable manifest wrappers with uniform API
+  - Automatic normalization (schema_hash, field_hashes computation)
+  - Pluggable validator system
+  - Diff computation with breaking change detection
+  - Migration path generation
+  - Query engine for manifest introspection
+  
+  This protocol will serve as the template for Event, API, and Agent protocols in future phases.
+
+successCriteria:
+  - "createDataProtocol() factory function implemented and operational"
+  - "All protocol methods working: manifest(), validate(), diff(), match(), set(), generateMigration()"
+  - "PII detection validator operational with 100% accuracy"
+  - "Breaking change detection accuracy: 100% for schema changes"
+  - "Manifest parsing ≤ 5ms p99 (1000 fields)"
+  - "Diff computation ≤ 10ms p99 (500 fields each)"
+  - "Migration generator produces valid SQL-like migration steps"
+  - "Query engine supports all DSL operators on data manifests"
+
+deliverables:
+  - "data-protocol.js - Complete Data Protocol implementation"
+  - "data-protocol.test.js - Comprehensive test suite"
+  - "sample-data-manifests/ - Example manifests for testing"
+  - "validators/ - PII detection and governance validators"
+  - "README-data-protocol.md - Usage documentation"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Immutable factory pattern with frozen instances and functional updates"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Automatic hash computation for schema and field-level change detection"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Breaking change detection based on schema_hash and field_hash comparisons"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Migration generation from diff analysis"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Query engine using foundation utilities for manifest introspection"
+      sourceMission: "B1.1_core-foundation"
+      
+  implementationScope:
+    coreDeliverable: "A complete Data Protocol implementation with createDataProtocol() factory and all protocol methods"
+    outOfScope:
+      - "Event Protocol logic (future B2.1)"
+      - "API Protocol logic (future B2.2)"
+      - "CLI interface (handled in B1.3)"
+      - "Cross-protocol linking (future Phase 3)"
+      - "Semantic analysis (future Phase 4)"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    allowedPatterns:
+      - "none"
+      - "rsip"
+      - "delegation"
+      - "boomerang"
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for protocol implementation
+          Secondary worker: research.code-analysis for validation logic and security review
+      rsip:
+        enabled: false
+      boomerang:
+        enabled: false
+    validationRules:
+      - "Delegation requires workerManifest entries for each referenced worker"
+      - "Context isolation must be enabled for protocol development"
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "worker_dispatch"
+        - "step_start"
+        - "step_complete"
+        - "evaluation_complete"
+        - "manifest.validated"
+        - "breaking.change.detected"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "Security vulnerabilities, PII detection accuracy, and governance policy enforcement"
+    - validator: "Claude"
+      focus: "Protocol design patterns and breaking change detection logic"
+
+  llmAsJudgeValidation:
+    enabled: true
+    
+    validationCriteria:
+      - "Security vulnerabilities (OWASP Top 10 compliance)"
+      - "PII detection and governance policy enforcement"
+      - "Breaking change detection accuracy"
+      - "Migration generation correctness"
+      - "Protocol API design and usability"
+      - "Testing coverage and edge case handling"
+
+    reviewerPrompt: |
+      You are a senior software architect and data engineer reviewing a Data Protocol implementation.
+      Review the following code for security, correctness, and adherence to manifest-first architecture:
+      
+      Code to review: [code_content]
+      Implementation context: Data Protocol v1.1.1 for cross-protocol manifest system
+      Security requirements: OWASP Top 10, PII detection, governance policy enforcement
+      
+      Evaluation criteria:
+      1. Security: PII detection accuracy, input validation, safe data handling
+      2. Correctness: Breaking change detection, diff computation, migration generation
+      3. Architecture: Manifest-first design, immutable patterns, protocol factory implementation
+      4. Performance: Manifest parsing, diff computation, query execution
+      5. Testing: Coverage of edge cases, malformed manifests, large datasets
+      6. Documentation: API clarity, usage examples, migration guide
+      
+      Provide specific feedback:
+      - Security issues, especially around PII handling and data validation
+      - Breaking change detection accuracy and edge cases
+      - Migration generation correctness for complex schema changes
+      - Performance bottlenecks in parsing or diff computation
+      - Overall assessment (PASS/FAIL/WARN) with confidence level
+
+    outputFormat:
+      securityFindings:
+        critical: []  # PII leakage, validation bypasses
+        high: []      # Governance policy violations
+        medium: []    # Input validation gaps
+        low: []       # Minor security improvements
+      correctnessAssessment:
+        breakingChangeDetection: ""  # Accuracy rating
+        diffComputation: ""          # Correctness rating
+        migrationGeneration: ""      # Reliability rating
+        issues: []                   # Specific correctness issues
+      architectureReview:
+        manifestFirstDesign: ""      # Adherence rating
+        immutability: ""             # Implementation rating
+        factoryPattern: ""           # Correctness rating
+        recommendations: []          # Architecture improvements
+      performanceNotes:
+        parsingSpeed: ""             # Meets targets rating
+        diffSpeed: ""                # Meets targets rating
+        querySpeed: ""               # Meets targets rating
+        bottlenecks: []              # Identified issues
+      testingEvaluation:
+        coverage: ""                 # Percentage
+        quality: ""                  # Rating
+        edgeCases: []                # Covered scenarios
+        gaps: []                     # Missing test scenarios
+      overallStatus: ""              # PASS/FAIL/WARN
+      confidence: ""                 # High/Medium/Low
+      actionItems: []                # Prioritized fixes
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "worker_timeout"
+        - "evaluation_call_failure"
+        - "network_errors"
+      behavior: "Auto retry once per worker or iteration"
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation, fallback to single worker"
+    tier_3_fallback_to_linear:
+      behavior: "Degrade to single implementation.backend worker without delegation"
+      telemetry:
+        emit:
+          - status: "fallback"
+          - fallbackTriggered: true
+    tier_4_human_escalation:
+      enforcement: "Missions hitting fallback require manual review before closing"
+      mechanism: "Checklist item or approval gate logged in summary"
+
+  qualityGates:
+    preCommit:
+      - "Run LLM-as-Judge security validation on protocol implementation"
+      - "Block commit if PII detection has false negatives"
+      - "Validate breaking change detection with test cases"
+      - "Verify migration generation produces valid output"
+      - "Ensure 100% test coverage for protocol logic"
+      - "Performance test: parsing < 5ms, diff < 10ms"
+      
+    postImplementation:
+      - "Automated security scan integration"
+      - "Performance benchmark validation"
+      - "Test with sample manifests from real-world scenarios"
+      - "Documentation review for accuracy and completeness"
+
+  handoffContext:
+    completed:
+      - "createDataProtocol() factory function implemented"
+      - "All protocol methods: manifest(), validate(), diff(), match(), set(), generateMigration()"
+      - "PII detection validator operational"
+      - "Breaking change detection implemented"
+      - "Migration generator functional"
+      - "Query engine operational"
+    interfaces:
+      - "Function: createDataProtocol(manifest) returns ProtocolInstance"
+      - "Method: protocol.manifest() returns cloned manifest"
+      - "Method: protocol.validate(names) returns {ok, results}"
+      - "Method: protocol.diff(other) returns {changes, breaking, significant}"
+      - "Method: protocol.match(expr) returns boolean"
+      - "Method: protocol.set(path, value) returns new ProtocolInstance"
+      - "Method: protocol.generateMigration(toManifest) returns migration steps"
+    assumptions:
+      - "Foundation utilities from B1.1 are available and tested"
+      - "Manifests conform to DataManifest schema structure"
+      - "Validators are pluggable and can be extended"
+      - "Migration format is SQL-like but implementation-agnostic"
+    nextMission: "B1.3: CLI Tool - Validate & Diff Commands"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Implementation Notes
+
+## Technical Requirements
+
+### Data Manifest Schema
+
+The Data Protocol operates on manifests with this structure:
+```json
+{
+  "dataset": {
+    "name": "string",
+    "lifecycle": {
+      "status": "active|deprecated|archived"
+    }
+  },
+  "schema": {
+    "primary_key": "string",
+    "fields": {
+      "field_name": {
+        "type": "string|number|boolean|date|...",
+        "required": boolean,
+        "pii": boolean,
+        "description": "string"
+      }
+    }
+  },
+  "governance": {
+    "policy": {
+      "classification": "public|internal|confidential|pii",
+      "retention_days": number
+    }
+  },
+  "lineage": {
+    "sources": ["urn:proto:data:source_dataset@v1"],
+    "transformations": ["description of transformations"]
+  }
+}
+```
+
+### Protocol Factory Implementation
+
+```javascript
+function createDataProtocol(manifestInput) {
+  // 1. Normalize input (compute hashes, metadata)
+  // 2. Freeze instance to prevent mutation
+  // 3. Return object with protocol methods
+  return {
+    manifest: () => { /* return cloned manifest */ },
+    validate: (names) => { /* run validators */ },
+    diff: (other) => { /* compute differences */ },
+    match: (expr) => { /* query manifest */ },
+    set: (path, value) => { /* return new instance */ },
+    generateMigration: (toManifest) => { /* generate migration */ }
+  };
+}
+```
+
+### Core Validators to Implement
+
+1. **Schema Validator**
+   - Validates field types and constraints
+   - Checks primary key existence
+   - Validates required fields
+
+2. **PII Detection Validator**
+   - Scans field names and metadata for PII indicators
+   - Checks governance.classification matches PII presence
+   - Flags datasets with PII fields but incorrect classification
+
+3. **Governance Policy Validator**
+   - Validates classification levels
+   - Checks retention policies
+   - Ensures compliance with data policies
+
+4. **Lineage Validator**
+   - Validates URN references to source datasets
+   - Checks for circular dependencies
+   - Validates transformation descriptions
+
+### Diff Computation Logic
+
+Breaking changes detection:
+- Schema hash change (structural change)
+- Field type changes (string → number)
+- Required field added (breaking for consumers)
+- Field removed (breaking)
+- Primary key change (breaking)
+
+Significant changes (non-breaking):
+- PII field added (significant for governance)
+- Field description changes
+- Governance policy updates
+- New optional fields
+
+### Migration Generation
+
+Generate SQL-like migration steps:
+```sql
+-- Example migration from v1 to v2
+ALTER TABLE users ADD COLUMN email VARCHAR(255);
+UPDATE users SET email = 'unknown@example.com' WHERE email IS NULL;
+ALTER TABLE users ALTER COLUMN email SET NOT NULL;
+```
+
+Migration must handle:
+- Schema additions/modifications
+- Data backfilling for new required fields
+- PII field encryption requirements
+- Governance policy updates
+
+### Query Engine
+
+Support queries like:
+- `schema.fields.email.pii:=:true` (find PII fields)
+- `governance.policy.classification:=:pii` (find PII datasets)
+- `dataset.lifecycle.status:=:active` (find active datasets)
+- `schema.fields:contains:email` (check if email field exists)
+
+### Performance Targets
+- Manifest parsing: ≤ 5ms p99 (1000 fields)
+- Diff computation: ≤ 10ms p99 (500 fields each)
+- Validation: ≤ 2ms per validator
+- Query execution: ≤ 1ms per query
+- Migration generation: ≤ 5ms
+
+### Testing Requirements
+- 100% line coverage for protocol logic
+- Property-based tests for diff symmetry
+- Test with 100+ malformed manifests
+- Performance tests with 10,000 field manifests
+- PII detection accuracy tests (100% precision/recall)
+- Breaking change detection tests (all scenarios)
+
+### Security Considerations
+- Input validation for all manifest fields
+- Safe handling of large manifests (size limits)
+- No code injection in migration generation
+- PII detection must not have false negatives
+- Governance policy enforcement
+
+### Documentation
+- JSDoc for all public APIs
+- Manifest schema documentation
+- Validator development guide
+- Migration authoring guide
+- Query DSL reference
+- Usage examples for common scenarios

@@ -1,0 +1,287 @@
+# Mission: B1.1 Core Foundation Utilities
+# Sprint: Sprint 1 - Phase 1 Foundation & Data Protocol
+
+missionId: "B1.1_core-foundation"
+version: "1.0.0"
+
+objective: |
+  Create zero-dependency shared foundation utilities used by all protocols in the Cross-Protocol Manifest System.
+  This mission establishes the core utilities that enable deterministic JSON serialization, hashing, dot-path navigation,
+  validator registration, and query parsing across all protocol implementations.
+
+context: |
+  This mission implements the foundational layer described in foundational-docs/Cross-Protocol Manifest System-k2.md
+  Section 3: Core Components - Shared Foundation. These utilities must be zero-dependency and copied into each
+  protocol bundle to maintain the standalone nature of each protocol implementation.
+
+  The utilities created in this mission will be used by:
+  - Data Protocol (B1.2)
+  - Event Protocol (future Phase 2)
+  - API Protocol (future Phase 2)
+  - Agent Protocol (future Phase 3)
+  - Semantic Protocol (future Phase 4)
+
+successCriteria:
+  - "All foundation utilities implemented with zero external dependencies"
+  - "100% unit test coverage achieved"
+  - "Performance benchmarks meet targets: 1M hashes/sec for FNV-1a"
+  - "All functions properly frozen/immutable to prevent mutation"
+  - "Validator registry system operational with pluggable validators"
+  - "Query DSL parser supports :=:, contains, >, < operators"
+
+deliverables:
+  - "utils.js - Complete foundation utility library"
+  - "utils.test.js - Comprehensive test suite with 100% coverage"
+  - "benchmark-results.json - Performance benchmark data"
+  - "README-foundation.md - Usage documentation for utilities"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Zero-dependency design pattern for standalone protocol bundles"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "FNV-1a hashing for structural diffs (fast), SHA-256 for cryptographic needs"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Tiny query DSL required for manifest querying without external dependencies"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+      
+  implementationScope:
+    coreDeliverable: "A complete utils.js library with jsonCanon, hash, dget/dset, validator registry, and query parser"
+    outOfScope:
+      - "Protocol-specific logic (handled in B1.2 and future missions)"
+      - "CLI interface (handled in B1.3)"
+      - "Integration with external systems"
+      - "Performance optimizations beyond benchmark targets"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    allowedPatterns:
+      - "none"
+      - "rsip"
+      - "delegation"
+      - "boomerang"
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for core utility development
+          Secondary worker: research.code-analysis for algorithm validation and security review
+      rsip:
+        enabled: false
+      boomerang:
+        enabled: false
+    validationRules:
+      - "Delegation requires workerManifest entries for each referenced worker"
+      - "Context isolation must be enabled for security-sensitive utility development"
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "worker_dispatch"
+        - "step_start"
+        - "step_complete"
+        - "evaluation_complete"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "Security vulnerabilities and OWASP Top 10 compliance in utility functions"
+    - validator: "Claude"
+      focus: "Algorithmic correctness and performance optimization opportunities"
+
+  llmAsJudgeValidation:
+    enabled: true
+    
+    validationCriteria:
+      - "Security vulnerabilities (OWASP Top 10 compliance)"
+      - "Code quality and maintainability standards"
+      - "Performance and efficiency requirements"
+      - "Testing coverage and quality assurance"
+      - "Documentation completeness and accuracy"
+
+    reviewerPrompt: |
+      You are a senior security engineer and code reviewer with expertise in secure software development.
+      Review the following utility functions for security vulnerabilities, code quality, and adherence to best practices:
+      
+      Code to review: [code_content]
+      Implementation context: Zero-dependency utility library for cross-protocol manifest system
+      Security requirements: OWASP Top 10 compliance, no external dependencies, immutable design
+      
+      Evaluation criteria:
+      1. Security: Check for OWASP Top 10 vulnerabilities and secure coding practices
+      2. Quality: Assess code maintainability, readability, and adherence to language best practices
+      3. Performance: Evaluate efficiency, resource usage, and algorithmic complexity
+      4. Testing: Review test coverage, test quality, and edge case handling
+      5. Documentation: Check code comments, API documentation, and implementation clarity
+      
+      Provide specific feedback:
+      - Security issues found (if any) with severity levels and remediation steps
+      - Quality improvements needed with specific code examples
+      - Performance optimizations suggested with complexity analysis
+      - Testing gaps identified with recommended test cases
+      - Overall assessment (PASS/FAIL/WARN) with confidence level
+      
+      Be constructive, specific, and actionable in your feedback.
+      Flag any critical security issues that would prevent deployment.
+
+    outputFormat:
+      securityFindings:
+        critical: []  # Issues that block deployment
+        high: []      # Issues requiring immediate attention
+        medium: []    # Issues to address before next release
+        low: []       # Issues to address in future maintenance
+      qualityAssessment:
+        maintainability: ""  # Rating: Excellent/Good/Fair/Poor
+        readability: ""      # Rating: Excellent/Good/Fair/Poor
+        bestPractices: ""    # Compliance level: Full/Partial/Minimal/None
+        recommendations: []  # Specific improvement suggestions
+      performanceNotes:
+        complexity: ""       # Big O analysis
+        bottlenecks: []      # Identified performance issues
+        optimizations: []    # Suggested improvements
+      testingEvaluation:
+        coverage: ""         # Percentage or qualitative assessment
+        quality: ""          # Rating: Excellent/Good/Fair/Poor
+        gaps: []            # Missing test scenarios
+      overallStatus: ""      # PASS/FAIL/WARN
+      confidence: ""         # High/Medium/Low
+      actionItems: []        # Prioritized list of required fixes
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "worker_timeout"
+        - "evaluation_call_failure"
+        - "network_errors"
+      behavior: "Auto retry once per worker or iteration"
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation, fallback to single worker"
+    tier_3_fallback_to_linear:
+      behavior: "Degrade to single implementation.backend worker without delegation"
+      telemetry:
+        emit:
+          - status: "fallback"
+          - fallbackTriggered: true
+    tier_4_human_escalation:
+      enforcement: "Missions hitting fallback require manual review before closing"
+      mechanism: "Checklist item or approval gate logged in summary"
+
+  qualityGates:
+    preCommit:
+      - "Run LLM-as-Judge security validation on all utility functions"
+      - "Block commit if critical security issues found"
+      - "Require security review for hash functions and validation logic"
+      - "Validate 100% test coverage achieved"
+      - "Verify performance benchmarks meet targets"
+      
+    postImplementation:
+      - "Automated security scan integration"
+      - "Performance benchmark validation"
+      - "Dependency vulnerability assessment (though utilities have zero dependencies)"
+      - "Code quality metrics verification"
+
+  handoffContext:
+    completed:
+      - "Complete utils.js library with all foundation utilities"
+      - "Comprehensive test suite with 100% coverage"
+      - "Performance benchmark results documented"
+      - "Security validation passed"
+    interfaces:
+      - "Function: jsonCanon(obj) - returns deterministic JSON string"
+      - "Function: hash(data, algorithm='fnv1a') - returns hash string"
+      - "Function: dget(obj, path) - returns value at dot-path"
+      - "Function: dset(obj, path, value) - returns new object with value set"
+      - "Function: registerValidator(name, fn) - registers validation function"
+      - "Function: runValidators(manifest, validators) - runs validation pipeline"
+      - "Function: parseQuery(expr) - parses query DSL expressions"
+    assumptions:
+      - "All utilities must be zero-dependency and standalone"
+      - "Hash functions must support both FNV-1a and SHA-256"
+      - "Query DSL must support :=:, contains, >, < operators"
+      - "Validator registry must be pluggable and extensible"
+    nextMission: "B1.2: Data Protocol Implementation"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Implementation Notes
+
+## Technical Requirements
+
+### Core Utilities to Implement
+
+1. **jsonCanon(obj)**
+   - Deterministic JSON serialization for stable hashing
+   - Must produce consistent output regardless of key order
+   - Handle nested objects, arrays, and primitive types
+
+2. **hash(data, algorithm='fnv1a')**
+   - Support FNV-1a (fast, non-cryptographic) for structural diffs
+   - Support SHA-256 (cryptographic) for security-sensitive operations
+   - Accept string or buffer input
+   - Return hex-encoded string
+
+3. **dget(obj, path)**
+   - Dot-path navigation: 'schema.fields.email' → obj.schema.fields.email
+   - Handle array indices: 'fields[0].name'
+   - Return undefined for non-existent paths
+   - Immutable - does not modify input object
+
+4. **dset(obj, path, value)**
+   - Functional pattern - returns new object, doesn't mutate input
+   - Support deep path creation
+   - Preserve object structure for unaffected paths
+
+5. **Validator Registry**
+   - registerValidator(name, validationFunction)
+   - runValidators(manifest, validatorNames[])
+   - Support async validators
+   - Collect and return all validation results
+
+6. **Query DSL Parser**
+   - Support operators: :=: (equals), contains, >, <, >=, <=
+   - Parse expressions: 'governance.policy.classification:=:pii'
+   - Return boolean result
+   - Handle nested path evaluation
+
+### Performance Targets
+- FNV-1a hashing: 1M operations/sec
+- SHA-256 hashing: 100K operations/sec
+- JSON canonicalization: < 1ms for 1000-field objects
+- Query parsing: < 0.1ms per expression
+
+### Security Considerations
+- No external dependencies (zero-dependency requirement)
+- Immutable functions to prevent state mutation
+- Safe handling of circular references
+- Input validation for all utility functions
+- No eval() or dynamic code execution
+
+### Testing Requirements
+- 100% line coverage
+- Property-based tests for hash consistency
+- Edge case testing (null, undefined, circular refs, deep nesting)
+- Performance benchmark tests
+- Security test cases (injection attempts, malformed input)
+
+## Dependencies
+- Node.js 20.x (for development and testing)
+- No runtime dependencies (zero-dependency requirement)
+
+## Documentation
+- JSDoc comments for all public functions
+- Usage examples for each utility
+- Performance benchmark results
+- Security considerations guide

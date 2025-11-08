@@ -1,0 +1,306 @@
+# Mission: B3.7 Integration Tests & Documentation
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.7_integration-docs"
+version: "1.0.0"
+
+objective: |
+  Create end-to-end integration test suite validating all protocols working together.
+  Test cross-protocol URN resolution, catalog-wide validation, CLI command workflows, and URN resolver service.
+  Update documentation to reflect Sprint 3 additions (Agent Protocol, Semantic Protocol, URN Resolver, CLI commands).
+
+context: |
+  Sprint 3 has added significant functionality:
+  - Agent Protocol validated and tested
+  - Semantic Protocol validated and tested
+  - Data Protocol test failures fixed (53/53 passing)
+  - Event Protocol test failures fixed (39/39 passing)
+  - URN Resolver Service implemented
+  - CLI query and graph commands added
+  
+  This final mission ensures everything works together and documentation is complete.
+  Phase 3 deliverables represent a major milestone for the Cross-Protocol Manifest System.
+
+successCriteria:
+  - "Integration test suite (integration-tests.js) with ≥20 test scenarios"
+  - "Cross-protocol URN resolution tested end-to-end"
+  - "Catalog validates manifests from all 5 protocol types"
+  - "CLI query command tested with real manifests"
+  - "CLI graph command tested with complex relationships"
+  - "URN resolver service tested with static and HTTP modes"
+  - "All protocol test suites passing (Data, Event, API, Agent, Semantic)"
+  - "Documentation updated: README.md with Sprint 3 features"
+  - "Documentation: Usage examples for new CLI commands"
+  - "Documentation: URN resolver service setup guide"
+  - "Phase 3 marked complete in project tracking"
+  - "Sprint 3 completion recorded in CMOS database"
+
+deliverables:
+  - "integration-tests.js - End-to-end integration test suite"
+  - "Updated README.md with Sprint 3 features"
+  - "CLI usage guide with examples"
+  - "URN resolver setup guide"
+  - "Sprint 3 completion report"
+  - "Phase 3 milestone documentation"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Integration tests validate cross-protocol functionality"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Documentation critical for open source adoption"
+      sourceMission: "Open source project philosophy"
+    - finding: "Phase 3 completes Agent and Semantic protocol implementation"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md Section 14"
+      
+  implementationScope:
+    coreDeliverable: "Integration tests and comprehensive documentation"
+    outOfScope:
+      - "Performance optimization beyond validation"
+      - "UI/web interface documentation"
+      - "Deployment guides (future phase)"
+      - "API reference documentation (future phase)"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for integration tests
+          Secondary worker: implementation.frontend for documentation
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "Documentation completeness and clarity"
+    - validator: "Claude"
+      focus: "Integration test coverage and correctness"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "Integration tests cover all cross-protocol scenarios"
+      - "Documentation is clear, accurate, and comprehensive"
+      - "Examples are tested and working"
+      - "Sprint 3 completion properly recorded"
+      - "No broken links or outdated information"
+
+  failureEscalation:
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation"
+    tier_4_human_escalation:
+      enforcement: "Sprint completion requires human verification"
+
+  qualityGates:
+    preCommit:
+      - "All integration tests pass"
+      - "All unit tests pass (all protocols)"
+      - "Documentation reviewed for accuracy"
+      - "Examples tested"
+      
+    postImplementation:
+      - "CMOS database health check"
+      - "Sprint 3 marked complete in database"
+      - "Context files updated"
+      - "Phase 3 milestone documented"
+
+  handoffContext:
+    completed:
+      - "Integration test suite complete with ≥20 scenarios"
+      - "All protocol tests passing"
+      - "Documentation updated and comprehensive"
+      - "Sprint 3 complete"
+      - "Phase 3 milestone achieved"
+    interfaces:
+      - "All protocol interfaces documented"
+      - "CLI command reference complete"
+      - "URN resolver API documented"
+    assumptions:
+      - "All previous missions (B3.1-B3.6) completed successfully"
+      - "Database health validated"
+    nextMission: "Sprint 4 Planning (Future)"
+    blockers: []
+    researchRequired: false
+    dependencies:
+      - "B3.3_data-protocol-fixes (requires)"
+      - "B3.4_event-protocol-fixes (requires)"
+      - "B3.6_cli-query-graph (requires)"
+
+---
+
+# Implementation Notes
+
+## Integration Test Scenarios
+
+### 1. Cross-Protocol URN Resolution
+- Agent manifest references Data Protocol URN
+- URN resolver resolves reference successfully
+- Fragment resolution into Data Protocol manifest
+- Version compatibility validated
+
+### 2. Catalog-Wide Validation
+- Create catalog with all 5 protocol types
+- Validate Data Protocol manifests
+- Validate Event Protocol manifests
+- Validate API Protocol manifests
+- Validate Agent Protocol manifests
+- Validate Semantic Protocol manifests
+- Cross-protocol relationship analysis
+
+### 3. CLI Workflows
+- proto query finds manifests across protocols
+- proto graph generates Mermaid diagram
+- proto validate works with all protocol types
+- proto diff compares cross-version manifests
+
+### 4. URN Resolver Service
+- Static file resolution for local development
+- HTTP resolution for remote manifests
+- Fragment resolution deep-linking
+- Error handling for unresolved URNs
+
+### 5. Semantic Enrichment
+- Semantic Protocol enriches Data manifest
+- Intent resolution correctly identifies CRUDE operations
+- Criticality scoring produces valid scores
+- Similarity discovery finds related manifests
+
+### 6. Agent Capabilities
+- Agent Protocol registers capabilities
+- URN-based capability linking works
+- Agent Card generation produces documentation
+- Delegation chain validation
+
+### 7. Performance Integration
+- End-to-end workflow ≤100ms
+- Query across 100 manifests ≤50ms
+- Graph generation ≤20ms
+- URN resolution ≤10ms
+
+### 8. Security Integration
+- PII detection across protocols
+- Security validation in catalog
+- OWASP compliance verification
+- Input sanitization throughout
+
+## Documentation Updates
+
+### README.md Updates
+- Add Phase 3 completion notice
+- Document Agent Protocol
+- Document Semantic Protocol
+- Document URN Resolver
+- Document new CLI commands
+- Update architecture diagram
+- Add Sprint 3 deliverables
+
+### CLI Usage Guide
+```markdown
+## Query Command
+
+Find manifests using query DSL:
+
+```bash
+# Find PII datasets
+proto query 'governance.policy.classification:=:pii'
+
+# Find APIs with specific features
+proto query 'api.security.schemes:contains:oauth2'
+```
+
+## Graph Command
+
+Visualize protocol relationships:
+
+```bash
+# Generate Mermaid diagram
+proto graph agent.support.json --format=mermaid
+
+# Show dependencies
+proto graph data.users.json --show-dependencies
+```
+```
+
+### URN Resolver Setup
+```markdown
+## URN Resolver Service
+
+### Static Mode (Local Development)
+
+```javascript
+const { URNResolver } = require('./urn-resolver');
+
+const resolver = new URNResolver({
+  mode: 'static',
+  manifestDir: './manifests'
+});
+
+const manifest = await resolver.resolveURN('urn:proto:data:users@v1.0.0');
+```
+
+### HTTP Mode (Production)
+
+```javascript
+const resolver = new URNResolver({
+  mode: 'http',
+  baseUrl: 'https://manifests.example.com'
+});
+```
+```
+
+## Sprint Completion Steps
+
+1. **Run all test suites**:
+   - Utils: 55/55 ✓
+   - Catalog: 13/13 ✓
+   - API Protocol: 53/53 ✓
+   - Data Protocol: 53/53 ✓
+   - Event Protocol: 39/39 ✓
+   - Agent Protocol: 50+ tests ✓
+   - Semantic Protocol: 40+ tests ✓
+   - Integration: 20+ tests ✓
+
+2. **Validate CMOS database**:
+   - `./cmos/cli.py db show current`
+   - Mark Sprint 3 complete
+   - Update contexts
+
+3. **Update documentation**:
+   - README.md
+   - CLI usage guide
+   - URN resolver guide
+   - Phase 3 milestone
+
+4. **Generate Sprint 3 report**:
+   - All missions completed
+   - Test results summary
+   - Performance benchmarks
+   - Deliverables list
+
+## Validation Checklist
+- [ ] All integration tests pass
+- [ ] All unit tests pass (all protocols)
+- [ ] Documentation updated and accurate
+- [ ] Examples tested and working
+- [ ] CMOS database health verified
+- [ ] Sprint 3 marked complete
+- [ ] Phase 3 milestone documented
+- [ ] No broken links or outdated info
+- [ ] Performance targets met
+- [ ] Security validations passed
+

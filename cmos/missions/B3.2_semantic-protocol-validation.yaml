@@ -1,0 +1,224 @@
+# Mission: B3.2 Semantic Protocol - Test Suite & Validation
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.2_semantic-protocol-validation"
+version: "1.0.0"
+
+objective: |
+  Create comprehensive test suite for Semantic Protocol v3.2.0 and validate implementation.
+  Test intent resolution (CRUDE), criticality scoring (0-1), confidence calculation (Bayesian), semantic vector generation (64-dimensional),
+  similarity discovery (cosine), and protocol bindings (requires/provides URN linking).
+
+context: |
+  This mission validates the existing "Semantic Protocol — v3.2.0.js" implementation (198 lines).
+  The Semantic Protocol acts as an analytical overlay that auto-enriches manifests with intent, criticality scores,
+  confidence levels, and 64-dimensional vectors for similarity discovery.
+  
+  Described in foundational-docs/Cross-Protocol Manifest System-k2.md Section 14: Roadmap Phase 4 (moved to Phase 3 for validation).
+  
+  Key capabilities to validate:
+  - Intent resolution: CRUDE (Create, Read, Update, Delete, Exec)
+  - Criticality scoring: 0-1 composite score
+  - Confidence calculation: Bayesian approach
+  - Semantic vectors: 64-dimensional normalized vectors
+  - Similarity discovery: Cosine similarity between manifests
+  - Cross-protocol validation: URN reference existence checks
+
+successCriteria:
+  - "Test suite (semantic-protocol.test.js) with ≥95% code coverage"
+  - "Intent resolution tests for all CRUDE operations"
+  - "Criticality scoring accuracy ≥90% against known test cases"
+  - "Confidence calculation produces valid 0-1 scores"
+  - "64-dimensional vectors normalize correctly (unit vectors)"
+  - "Cosine similarity produces expected results for test cases"
+  - "URN cross-validation tests pass"
+  - "Performance: vector generation ≤50ms p99"
+  - "All tests passing (target: 40+ test cases)"
+  - "Property-based tests for mathematical operations"
+
+deliverables:
+  - "semantic-protocol.test.js - Comprehensive test suite"
+  - "Test fixtures with known test cases for validation"
+  - "Performance benchmark data for vector operations"
+  - "Validation report documenting spec compliance"
+  - "Bug fix patches if issues found"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Semantic layer auto-enriches manifests with intent, criticality, and vectors"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "CRUDE intent taxonomy: Create, Read, Update, Delete, Exec"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Criticality formula: impact × 0.4 + visibility × 0.2 + PII × 0.3 + blastRadius × 0.1"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "64-dimensional semantic vectors for similarity discovery"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+      
+  implementationScope:
+    coreDeliverable: "Comprehensive test suite validating all Semantic Protocol functionality"
+    outOfScope:
+      - "Re-implementing the protocol (only validate existing)"
+      - "Machine learning integration (vectors are pre-computed)"
+      - "Vector database integration (Pinecone/Weaviate support future)"
+      - "CLI integration (handled in B3.6)"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for test suite development
+          Secondary worker: research.code-analysis for mathematical validation
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "worker_dispatch"
+        - "step_start"
+        - "step_complete"
+        - "validation_complete"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "Mathematical correctness of vector operations and scoring algorithms"
+    - validator: "Claude"
+      focus: "Test coverage and edge case handling"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "Test coverage ≥95% for all Semantic Protocol functions"
+      - "Mathematical operations validated with property-based tests"
+      - "Vector normalization mathematically correct"
+      - "Criticality scoring formula implemented correctly"
+      - "Performance tests validate SLO targets"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "worker_timeout"
+        - "evaluation_call_failure"
+      behavior: "Auto retry once per worker"
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation"
+    tier_3_fallback_to_linear:
+      behavior: "Degrade to single implementation.backend worker"
+    tier_4_human_escalation:
+      enforcement: "Missions hitting fallback require manual review"
+
+  qualityGates:
+    preCommit:
+      - "All mathematical operations validated"
+      - "Vector operations produce deterministic results"
+      - "Coverage report shows ≥95%"
+      - "Performance benchmarks within targets"
+      
+    postImplementation:
+      - "Integration test with all protocol types"
+      - "Similarity discovery accuracy verified"
+      - "Cross-protocol URN validation tested"
+
+  handoffContext:
+    completed:
+      - "Semantic Protocol implementation validated"
+      - "Comprehensive test suite with ≥95% coverage"
+      - "Mathematical operations verified correct"
+      - "Performance benchmarks documented"
+    interfaces:
+      - "Class: SemanticProtocolV32 with enrichment methods"
+      - "Function: createSemanticProtocol(manifest) - creates enriched protocol"
+      - "Function: createSemanticCatalog(protocols) - manages semantic analysis"
+      - "Method: _resolveIntent() - determines CRUDE intent"
+      - "Method: _calculateCriticality() - computes 0-1 score"
+      - "Method: similarityTo(other) - cosine similarity calculation"
+    assumptions:
+      - "Semantic Protocol implementation is mostly correct"
+      - "Mathematical operations need validation"
+      - "Vector generation may need performance optimization"
+    nextMission: "B3.5: URN Resolver Service Implementation"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Implementation Notes
+
+## Test Categories Required
+
+### 1. Intent Resolution Tests
+- Create intent: POST, INSERT, ADD operations
+- Read intent: GET, SELECT, FETCH operations
+- Update intent: PUT, PATCH, UPDATE operations
+- Delete intent: DELETE, REMOVE operations
+- Exec intent: EXECUTE, RUN, TRIGGER operations
+- Edge cases: Unknown operations, mixed intents
+
+### 2. Criticality Scoring Tests
+- Formula validation: impact × 0.4 + visibility × 0.2 + PII × 0.3 + blastRadius × 0.1
+- Score range validation: 0-1
+- Known test cases with expected scores
+- Component weight validation
+- Edge cases: missing components, invalid values
+
+### 3. Confidence Calculation Tests
+- Bayesian approach validation
+- Manifest completeness factor
+- 0-1 range validation
+- Prior probability handling
+- Edge cases: empty manifests, complete manifests
+
+### 4. Semantic Vector Tests
+- 64-dimensional vector generation
+- Vector normalization (unit vectors)
+- Deterministic generation (same input = same vector)
+- Component extraction from manifest fields
+- Type + purpose + description vectorization
+
+### 5. Similarity Discovery Tests
+- Cosine similarity calculation
+- Expected similarity scores for known test cases
+- Similarity range: -1 to 1 (typically 0 to 1 for our use case)
+- Identical manifests: similarity = 1.0
+- Orthogonal manifests: similarity ≈ 0.0
+- Property-based tests: similarity(A, B) = similarity(B, A)
+
+### 6. Protocol Bindings Tests
+- requires/provides URN linking
+- Cross-protocol validation
+- URN existence checking
+- Compatibility validation
+
+### 7. Performance Tests
+- Vector generation ≤50ms p99
+- Similarity calculation ≤10ms
+- Criticality scoring ≤5ms
+- Intent resolution ≤1ms
+- Bulk processing performance
+
+### 8. Integration Tests
+- Enrich Data Protocol manifests
+- Enrich Event Protocol manifests
+- Enrich API Protocol manifests
+- Cross-protocol relationship discovery
+
+## Mathematical Validation
+- Vector operations use property-based testing
+- Criticality formula components sum to 1.0
+- Confidence scores are valid probabilities
+- Cosine similarity is symmetric
+- Vector normalization produces unit vectors
+

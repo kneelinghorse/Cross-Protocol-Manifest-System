@@ -1,0 +1,243 @@
+# Mission: B3.4 Event Protocol - Fix Test Failures
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.4_event-protocol-fixes"
+version: "1.0.0"
+
+objective: |
+  Fix 6 failing tests in event-protocol.test.js to achieve 100% test passage (currently 33/39 passing).
+  Address event validation edge cases (3 failures) and security validation tests (3 failures) while maintaining
+  exceptional performance (18M+ events/sec throughput).
+
+context: |
+  The Event Protocol implementation (event-protocol.js) was completed in Sprint 2 (Mission B2.1) with 33/39 tests passing.
+  Core pub/sub functionality works correctly with excellent performance (18.33M events/sec median).
+  
+  The 6 failing tests represent edge cases and security scenarios:
+  
+  Event Validation Issues (3 tests):
+  - validateEvent: detects missing required fields
+  - validateEvent: detects invalid field types
+  - validateEvent: handles null and undefined
+  
+  Security Validation Issues (3 tests):
+  - security: prevents event injection via validation
+  - security: validates event schema prevents bypass
+  - security: prevents prototype pollution
+
+successCriteria:
+  - "All 39 event protocol tests passing (0 failures)"
+  - "Event validation: Required field detection working"
+  - "Event validation: Type checking catches invalid types"
+  - "Event validation: Null/undefined handling correct"
+  - "Security: Event injection prevention tests pass"
+  - "Security: Schema validation bypass prevention tests pass"
+  - "Security: Prototype pollution prevention tests pass"
+  - "Performance maintained: ≥1M events/sec throughput"
+  - "No regression in currently passing tests (33 tests)"
+  - "Zero external dependencies maintained"
+
+deliverables:
+  - "Fixed event-protocol implementation (event-protocol.js)"
+  - "Test results showing 39/39 passing"
+  - "Security validation report"
+  - "Performance benchmark comparison (before/after)"
+  - "Code review notes documenting security fixes"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Event validation critical for Kafka/AsyncAPI compatibility"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Security validation prevents event injection attacks"
+      sourceMission: "OWASP Top 10 compliance requirements"
+    - finding: "Prototype pollution prevention required for secure JavaScript"
+      sourceMission: "OWASP Top 10: A08 Integrity Failures"
+      
+  implementationScope:
+    coreDeliverable: "Fixes to event-protocol for 6 failing tests"
+    outOfScope:
+      - "Performance optimizations (already exceeds 1M events/sec)"
+      - "Adding new validation rules beyond tests"
+      - "Refactoring unrelated code"
+      - "Breaking API changes"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: false
+    validationRules:
+      - "Security bug fix mission uses linear execution for focused debugging"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "step_start"
+        - "step_complete"
+        - "security_test_run"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "Security vulnerability assessment and OWASP compliance"
+    - validator: "Claude"
+      focus: "Event validation logic and edge case handling"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "Security fixes align with OWASP Top 10"
+      - "Event validation properly handles edge cases"
+      - "No performance degradation introduced"
+      - "Backward compatibility maintained"
+      - "Test fixtures demonstrate proper validation"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "test_flakiness"
+      behavior: "Auto retry once"
+    tier_4_human_escalation:
+      enforcement: "Security fixes require security review before deployment"
+
+  qualityGates:
+    preCommit:
+      - "All 39 tests must pass"
+      - "Security validation tests verify OWASP compliance"
+      - "Performance maintained ≥1M events/sec"
+      - "No regression in functionality"
+      
+    postImplementation:
+      - "Security penetration test scenarios"
+      - "Integration test with catalog system"
+      - "Cross-protocol test with Data and API protocols"
+
+  handoffContext:
+    completed:
+      - "All 6 failing tests now passing"
+      - "39/39 tests passing for Event Protocol"
+      - "Security vulnerabilities fixed"
+      - "Performance maintained"
+    interfaces:
+      - "All existing Event Protocol interfaces maintained"
+      - "No breaking changes to pub/sub API"
+    assumptions:
+      - "Performance must not degrade below 1M events/sec"
+      - "Security fixes are critical for production use"
+    nextMission: "B3.7: Integration Tests & Documentation"
+    blockers: []
+    researchRequired: false
+    dependencies:
+      - "B3.2_semantic-protocol-validation (sequential dependency)"
+
+---
+
+# Implementation Notes
+
+## Failing Test Analysis
+
+### Event Validation Failures (3 tests)
+**Root Cause**: validateEvent() not properly checking required fields and types
+
+**Fix Strategy**:
+- Implement required field validation
+- Add type checking for event fields
+- Handle null/undefined gracefully
+- Return validation errors with clear messages
+
+**Test Cases**:
+- Missing required fields: event without required fields rejected
+- Invalid types: string where number expected rejected
+- Null/undefined: handled properly without crashes
+
+**Implementation Details**:
+```javascript
+function validateEvent(event, schema) {
+  if (!event || typeof event !== 'object') {
+    return { valid: false, errors: ['Event must be an object'] };
+  }
+  
+  // Check required fields
+  const required = Object.keys(schema).filter(k => schema[k].required);
+  for (const field of required) {
+    if (!(field in event)) {
+      return { valid: false, errors: [`Missing required field: ${field}`] };
+    }
+  }
+  
+  // Type validation
+  for (const [field, value] of Object.entries(event)) {
+    if (field in schema) {
+      const expectedType = schema[field].type;
+      const actualType = typeof value;
+      if (expectedType && actualType !== expectedType) {
+        return { valid: false, errors: [`Type mismatch for ${field}`] };
+      }
+    }
+  }
+  
+  return { valid: true, errors: [] };
+}
+```
+
+### Security Validation Failures (3 tests)
+**Root Cause**: Missing security checks for injection and prototype pollution
+
+**Fix Strategy**:
+1. **Event Injection Prevention**:
+   - Sanitize event data before processing
+   - Validate against schema before accepting
+   - Reject events with malicious payloads
+
+2. **Schema Bypass Prevention**:
+   - Enforce schema validation cannot be disabled
+   - Validate schema structure before use
+   - Reject events that don't match schema
+
+3. **Prototype Pollution Prevention**:
+   - Block __proto__, constructor, prototype in event keys
+   - Use Object.create(null) for event storage
+   - Validate event keys against whitelist
+
+**Test Cases**:
+- Event injection: Malicious event payloads rejected
+- Schema bypass: Cannot disable validation or bypass checks
+- Prototype pollution: __proto__ attempts blocked
+
+**Implementation Details**:
+```javascript
+// Prototype pollution prevention
+const BLOCKED_KEYS = ['__proto__', 'constructor', 'prototype'];
+
+function sanitizeEvent(event) {
+  const sanitized = Object.create(null);
+  for (const [key, value] of Object.entries(event)) {
+    if (BLOCKED_KEYS.includes(key)) {
+      throw new Error(`Blocked key: ${key}`);
+    }
+    sanitized[key] = value;
+  }
+  return sanitized;
+}
+```
+
+## Performance Considerations
+- Validation overhead must be minimal
+- Target: maintain 1M+ events/sec
+- Use fast path for common cases
+- Cache validation results where possible
+
+## Security Review Checklist
+- [ ] Input sanitization implemented
+- [ ] Required field validation working
+- [ ] Type checking prevents injection
+- [ ] Prototype pollution blocked
+- [ ] Schema bypass impossible
+- [ ] Error messages don't leak sensitive info
+

@@ -1,0 +1,388 @@
+{
+  "project": {
+    "name": "Cross-Protocol Manifest System",
+    "version": "0.3.0",
+    "description": "Declarative, self-describing protocol framework for APIs, events, datasets, and AI agents",
+    "status": "sprint_02_complete",
+    "start_date": "2025-11-07",
+    "current_sprint": null,
+    "deployment": {
+      "platform": "npm packages + static hosting",
+      "integration_target": "GitHub Actions + CI/CD pipelines",
+      "environment": "development"
+    },
+    "sprint_history": [
+      {
+        "sprint_id": "SPRINT-01-PHASE1",
+        "title": "Sprint 1: Phase 1 Foundation & Data Protocol",
+        "status": "Completed",
+        "start_date": "2025-11-07T11:09:51Z",
+        "end_date": "2025-11-07T14:08:13Z",
+        "total_missions": 4,
+        "completed_missions": 4,
+        "completion_rate": 1.0,
+        "key_achievements": [
+          "100% mission completion rate",
+          "All performance benchmarks met or exceeded",
+          "Zero security vulnerabilities",
+          "100% test coverage maintained",
+          "Comprehensive documentation produced"
+        ],
+        "deliverables": [
+          "utils.js - Foundation utilities with 100% coverage",
+          "data-protocol.js - Data Protocol v1.1.1 implementation",
+          "proto.js - CLI tool with validate/diff/migration commands",
+          "agents.md - Root agent configuration",
+          "Comprehensive test suite with property-based tests",
+          "Performance benchmark suite",
+          "LLM-as-Judge validation protocol"
+        ],
+        "metrics": {
+          "hashing_performance": "1M+ ops/sec (FNV-1a), 100K+ ops/sec (SHA-256)",
+          "manifest_parsing": "<5ms p99 (1000 fields)",
+          "diff_computation": "<10ms p99 (500 fields each)",
+          "cli_startup": "<500ms (95th percentile)",
+          "test_coverage": "100%",
+          "security_issues": 0
+        }
+      },
+      {
+        "sprint_id": "SPRINT-02-PHASE2",
+        "title": "Sprint 2: Phase 2 Event & API Protocols",
+        "status": "Completed",
+        "start_date": "2025-11-07T20:08:59Z",
+        "end_date": "2025-11-08T07:30:00Z",
+        "total_missions": 4,
+        "completed_missions": 4,
+        "completion_rate": 1.0,
+        "key_achievements": [
+          "100% mission completion rate",
+          "Event Protocol v1.1.1 implemented with Kafka/AsyncAPI compatibility",
+          "API Protocol v1.1.1 implemented with OpenAPI 3.0.3 support",
+          "Catalog System v1.1.1 with cross-protocol URN resolution",
+          "GitHub Actions CI/CD integration for manifest validation",
+          "53/53 tests passing for API Protocol",
+          "13/13 tests passing for Catalog System",
+          "22.94M events/sec performance for Event Protocol"
+        ],
+        "deliverables": [
+          "event-protocol.js - Event Protocol with pub/sub/validate",
+          "event-protocol.test.js - Comprehensive event tests",
+          "api-protocol.js - API Protocol with SDK generation",
+          "api-protocol.test.js - 53 passing tests",
+          "catalog_system_v_1_1_1.js - Unified catalog with URN resolution",
+          "catalog-system.test.js - 13 passing tests",
+          ".github/workflows/manifest-validation.yml - CI/CD pipeline"
+        ],
+        "metrics": {
+          "event_throughput": "22.94M events/sec",
+          "api_tests": "53/53 passing",
+          "catalog_tests": "13/13 passing",
+          "manifest_parsing": "<6ms p99",
+          "diff_computation": "<1ms p99",
+          "security_issues": 0
+        }
+      }
+    ]
+  },
+  "working_memory": {
+    "active_domain": "cross-protocol-manifest-system",
+    "session_count": 4,
+    "last_session": "2025-11-08T07:30:00Z",
+    "agents_md_path": "./agents.md",
+    "agents_md_loaded": true,
+    "agents_md_version": "1.0.0",
+    "active_mission": null,
+    "domains": {
+      "cross-protocol-manifest-system": {
+        "status": "active",
+        "priority": 1,
+        "current_phase": "Phase 3 - Agent & Semantic Protocols (Sessions 9-12)",
+        "orchestration_pattern": "delegation",
+        "missions_planned": 8,
+        "missions_completed": 8,
+        "missions_in_progress": 0,
+        "missions_queued": 0,
+        "critical_facts": [
+          "Manifest-First Philosophy: The manifest is the source of truth; everything else is derived",
+          "Zero-Dependency Design: Each protocol file runs standalone without npm install requirements",
+          "Immutability Pattern: All instances frozen; updates return new instances",
+          "URN-First Approach: All cross-protocol references use URN format for loose coupling",
+          "GitOps-Enabled: Version-controlled manifests enable automated SDK generation and compliance checking",
+          "Database-First CMOS: SQLite is source of truth; files are mirrors",
+          "Mission-Driven Development: All work tracked through CMOS missions",
+          "Delegation Pattern: Multiple workers per mission for specialized capabilities",
+          "Work Verification Required: Prevent simulated completions with deliverable checks"
+        ],
+        "constraints": [
+          "Mutually Exclusive Patterns: Only one orchestration pattern per mission",
+          "Parity Requirement: SQLite database must remain in sync with file mirrors",
+          "Security First: All code must pass OWASP Top 10 validation",
+          "Documentation Lock: All references must target foundational-docs/ not vendor docs",
+          "Performance Budgets: Strict SLOs for parsing, diff, and query operations",
+          "No Flat Files: Mission details stored in database, not YAML files",
+          "Work Verification: Must verify actual implementation before mission completion"
+        ],
+        "decisions_made": [
+          "Approved Cross-Protocol Manifest System as target project for CMOS implementation",
+          "Selected Phase 1 (Weeks 1-4) as initial focus: Foundation & Data Protocol",
+          "Established delegation pattern as primary orchestration approach",
+          "Adopted LLM-as-Judge validation protocol with Gemini + Claude",
+          "Set 95% test coverage threshold and performance benchmarks",
+          "Created root agents.md for project-specific agent instructions",
+          "Updated PROJECT_CONTEXT.json with agents.md metadata",
+          "Completed Sprint 01 with 100% mission completion rate",
+          "Completed Sprint 02 with 100% mission completion rate",
+          "Configured all missions in database (no flat file dependencies)",
+          "Identified and fixed mission status inconsistency bug",
+          "Validated and improved mission execution prompt",
+          "Established work verification requirements",
+          "Sprint model: n sessions per sprint (not time-based)",
+          "Mission count per sprint: 4-10 based on work complexity",
+          "Open source project philosophy: balance value with reasonable testing"
+        ],
+        "files_created": [
+          "docs/initial-implementation-plan.md",
+          "docs/master-context-update-session-001.md",
+          "agents.md",
+          "cmos/missions/B1.1_core-foundation.yaml",
+          "cmos/missions/B1.2_data-protocol.yaml",
+          "utils.js",
+          "utils.test.js",
+          "data-protocol.js",
+          "data-protocol.test.js",
+          "proto.js",
+          "README-foundation.md",
+          "benchmark-results.json",
+          "event-protocol.js",
+          "event-protocol.test.js",
+          "api-protocol.js",
+          "api-protocol.test.js",
+          "catalog_system_v_1_1_1.js",
+          "catalog-system.test.js",
+          ".github/workflows/manifest-validation.yml",
+          "agent_protocol_v_1_1_1.js (pre-existing, needs validation)",
+          "Semantic Protocol — v3.2.0.js (pre-existing, needs validation)"
+        ],
+        "sprint_02_missions_completed": [
+          {
+            "id": "B2.1_event-protocol",
+            "name": "B2.1: Event Protocol Implementation",
+            "status": "Completed",
+            "completed_at": "2025-11-07T20:53:08Z"
+          },
+          {
+            "id": "B2.2_api-protocol",
+            "name": "B2.2: API Protocol Implementation",
+            "status": "Completed",
+            "completed_at": "2025-11-07T21:48:20Z"
+          },
+          {
+            "id": "B2.3_catalog-system",
+            "name": "B2.3: Catalog System Implementation",
+            "status": "Completed",
+            "completed_at": "2025-11-07T23:01:11Z"
+          },
+          {
+            "id": "B2.4_github-actions",
+            "name": "B2.4: GitHub Actions Integration",
+            "status": "Completed",
+            "completed_at": "2025-11-07T23:09:04Z"
+          }
+        ]
+      }
+    }
+  },
+  "technical_context": {
+    "dependencies": [
+      "Node.js 20.x (primary runtime)",
+      "Python 3.11+ (SQLite utilities and validation)",
+      "npm (package management)",
+      "SQLite 3 (canonical store)",
+      "Git (version control)"
+    ],
+    "tooling": {
+      "seed_database": "python3 cmos/scripts/seed_sqlite.py",
+      "validate_parity": "python3 cmos/scripts/validate_parity.py",
+      "mission_runtime": "python3 cmos/scripts/mission_runtime.py",
+      "package_starter": "./cmos/scripts/package_starter.sh",
+      "start_mission": "python3 cmos/scripts/mission_runtime.py start --mission MISSION_ID --summary \"DESCRIPTION\" --agent \"AGENT_NAME\"",
+      "complete_mission": "python3 cmos/scripts/mission_runtime.py complete --mission MISSION_ID --summary \"RESULTS\" --notes \"DETAILED_NOTES\"",
+      "check_status": "python3 cmos/scripts/mission_runtime.py status",
+      "query_missions": "python3 -c \"import sqlite3; conn = sqlite3.connect('cmos/db/cmos.sqlite'); cursor = conn.cursor(); cursor.execute('SELECT id, name, status FROM missions WHERE sprint_id = ? ORDER BY id', ('SPRINT-02-PHASE2',)); [print(f\"{row[0]}: {row[2]}\") for row in cursor.fetchall()]; conn.close()\""
+    },
+    "performance_targets": {
+      "manifest_parsing_ms": 5,
+      "diff_computation_ms": 10,
+      "catalog_analysis_ms": 100,
+      "semantic_vector_ms": 50,
+      "cli_startup_ms": 500,
+      "hashing_fnv1a_ops_per_sec": 1000000,
+      "hashing_sha256_ops_per_sec": 100000,
+      "event_protocol_throughput": "22.94M events/sec"
+    },
+    "research_findings": {
+      "architecture_pattern": "Zero-dependency, immutable, URN-first design",
+      "core_innovation": "Shared architectural pattern with immutable factories and pluggable validators",
+      "semantic_layer": "Auto-enrichment with intent, criticality, and 64-dimensional vectors",
+      "sprint_01_outcome": "Exceptional success - 100% mission completion, all quality gates passed",
+      "sprint_02_outcome": "Exceptional success - 100% mission completion, catalog system fully integrated",
+      "sprint_02_complexity": "Higher than Phase 1 due to cross-protocol integration requirements",
+      "mission_status_bug": "Identified and fixed - completion logic was correct, but premature completion calls caused inconsistencies",
+      "work_verification": "Established requirement to verify actual implementation before mission completion",
+      "sprint_philosophy": "Sprints are n sessions (not time-based), 4-10 missions typical based on complexity"
+    },
+    "integration_points": [
+      "foundational-docs/Cross-Protocol Manifest System-k2.md",
+      "docs/initial-implementation-plan.md",
+      "cmos/workers/manifest.yaml",
+      "cmos/agents.md",
+      "agents.md",
+      "cmos/db/cmos.sqlite (canonical mission store)",
+      ".github/workflows/manifest-validation.yml"
+    ],
+    "database_schema": {
+      "sprints": "Sprint tracking and metadata",
+      "missions": "Mission definitions and status",
+      "mission_dependencies": "Inter-mission dependency tracking",
+      "contexts": "Master and project context storage",
+      "context_snapshots": "Historical context versions",
+      "session_events": "Mission lifecycle events",
+      "telemetry_events": "Performance and monitoring data"
+    }
+  },
+  "sprint_tracking": {
+    "current_sprint": null,
+    "sprint_title": null,
+    "sprint_focus": "Sprint 3 planning in progress",
+    "total_sprints_planned": 20,
+    "current_session": 4,
+    "sprints_completed": 2,
+    "sprints_in_progress": 0,
+    "phase_missions": {
+      "phase_1_foundation": [
+        "B1.1: Core Foundation Utilities (Completed)",
+        "B1.2: Data Protocol Implementation (Completed)",
+        "B1.3: CLI Tool - Validate & Diff Commands (Completed)",
+        "B1.4: Test Suite & Quality Gates (Completed)"
+      ],
+      "phase_2_event_api": [
+        "B2.1: Event Protocol Implementation (Completed)",
+        "B2.2: API Protocol Implementation (Completed)",
+        "B2.3: Catalog System Implementation (Completed)",
+        "B2.4: GitHub Actions Integration (Completed)"
+      ],
+      "phase_3_linking": [
+        "Agent Protocol (Future)",
+        "URN Resolver Service (Future)"
+      ],
+      "phase_4_semantic": [
+        "Semantic Protocol Implementation (Future)"
+      ],
+      "phase_5_release": [
+        "Documentation Site (Future)",
+        "GitHub Actions (In Progress)",
+        "npm Release (Future)"
+      ]
+    }
+  },
+  "context_health": {
+    "size_kb": 9.8,
+    "size_limit_kb": 100,
+    "sessions_since_reset": 3,
+    "last_reset": null,
+    "compression_enabled": false,
+    "anti_pattern_detection": false,
+    "agents_md_size_kb": 12.8,
+    "database_size_kb": 52.4
+  },
+  "ai_instructions": {
+    "preferred_language": "yaml",
+    "code_style": "mission_protocol_v2",
+    "testing_required": true,
+    "documentation_level": "comprehensive",
+    "database_first": true,
+    "special_instructions": [
+      "Always load agents.md before starting missions",
+      "Apply OWASP Top 10 security guidelines during implementation",
+      "Keep PROJECT_CONTEXT.json and missions/backlog.yaml in sync with SQLite database",
+      "Validate parity between SQLite and file mirrors before mission completion",
+      "Monitor telemetry events for performance and error tracking",
+      "NEVER modify files in cmos/ directory (except PROJECT_CONTEXT.json)",
+      "ALWAYS use CMOS scripts for mission lifecycle operations",
+      "Follow manifest-first development approach",
+      "Read mission details from database, not flat files",
+      "Use delegation pattern as configured in mission metadata",
+      "Maintain 100% test coverage for protocol implementations",
+      "Document all cross-protocol integration points",
+      "VERIFY actual work completion before calling complete_mission()",
+      "Check for file modifications, test results, and deliverables",
+      "Use fetch_next_candidate() instead of manual SQL for mission selection"
+    ],
+    "mission_execution_prompt": {
+      "validated": true,
+      "key_improvements": [
+        "Use runtime.fetch_next_candidate() instead of manual SQL",
+        "Add work verification step before completion",
+        "Add parity validation after each operation",
+        "Add error handling with block_mission() fallback",
+        "Add context loading at start",
+        "Add mission readiness checks"
+      ],
+      "current_prompt": "See docs/master-context-update-session-002.md for validated prompt"
+    }
+  },
+  "next_session_context": {
+    "blockers": [],
+    "important_reminders": [
+      "Sprint 2 completed successfully - 100% mission completion",
+      "Plan Sprint 3 (Phase 3: Agent & Semantic Protocols)",
+      "Validate existing agent_protocol_v_1_1_1.js implementation",
+      "Validate existing Semantic Protocol v3.2.0 implementation",
+      "Run comprehensive tests on all protocols",
+      "Determine Sprint 3 mission structure (4-10 missions)",
+      "Balance new features with appropriate testing",
+      "Open source project philosophy: provide great value to devs for free",
+      "Sprints are session-based, not time-based"
+    ],
+    "key_reference_documents": [
+      "agents.md",
+      "cmos/agents.md",
+      "docs/initial-implementation-plan.md",
+      "foundational-docs/Cross-Protocol Manifest System-k2.md",
+      "cmos/workers/manifest.yaml",
+      "cmos/PROJECT_CONTEXT.json",
+      "cmos/db/cmos.sqlite (canonical mission store)",
+      "cmos/docs/master-context-update-session-002.md"
+    ],
+    "when_we_resume": [
+      "Run comprehensive test suite on all protocols",
+      "Validate agent_protocol_v_1_1_1.js implementation",
+      "Validate Semantic Protocol v3.2.0 implementation",
+      "Plan Sprint 3 missions based on Phase 3 requirements",
+      "Create Sprint 3 missions in database",
+      "Export updated backlog for visibility",
+      "Begin Sprint 3 execution"
+    ]
+  },
+  "metadata": {
+    "migrated_at": "2025-11-06T05:09:02.870476+00:00",
+    "source_version": "cmos-v2",
+    "last_updated": "2025-11-08T07:30:00Z",
+    "session_id": "PLAN-20251108-004",
+    "agents_md_updated": "2025-11-07T18:28:00Z",
+    "sprint_01_completed": "2025-11-07T14:08:13Z",
+    "sprint_02_completed": "2025-11-08T07:30:00Z",
+    "sprint_03_planning": "2025-11-08T07:30:00Z",
+    "total_sprints": 20,
+    "sprints_completed": 2,
+    "sprints_in_progress": 0,
+    "total_missions": 8,
+    "missions_completed": 8,
+    "missions_in_progress": 0,
+    "missions_queued": 0,
+    "context_updates": 4,
+    "session_events": 19,
+    "database_size_kb": 52.4
+  }
+}

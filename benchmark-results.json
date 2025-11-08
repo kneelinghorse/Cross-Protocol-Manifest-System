@@ -1,0 +1,77 @@
+{
+  "timestamp": "2025-11-07T18:19:34.747Z",
+  "results": [
+    {
+      "name": "FNV-1a Hash",
+      "iterations": 1000000,
+      "duration": 114.645916,
+      "opsPerSec": 8722509
+    },
+    {
+      "name": "SHA-256 Hash",
+      "iterations": 100000,
+      "duration": 217.021291,
+      "opsPerSec": 460784
+    },
+    {
+      "name": "JSON Canon (simple)",
+      "iterations": 10000,
+      "duration": 5.153166,
+      "opsPerSec": 1940555
+    },
+    {
+      "name": "JSON Canon (nested)",
+      "iterations": 10000,
+      "duration": 26.747042,
+      "opsPerSec": 373873
+    },
+    {
+      "name": "JSON Canon (large)",
+      "iterations": 1000,
+      "duration": 164.005083,
+      "opsPerSec": 6097
+    },
+    {
+      "name": "dget (simple path)",
+      "iterations": 100000,
+      "duration": 41.63425,
+      "opsPerSec": 2401869
+    },
+    {
+      "name": "dget (nested path)",
+      "iterations": 100000,
+      "duration": 33.06525,
+      "opsPerSec": 3024323
+    },
+    {
+      "name": "dset (simple)",
+      "iterations": 100000,
+      "duration": 14.237834,
+      "opsPerSec": 7023540
+    },
+    {
+      "name": "dset (nested)",
+      "iterations": 10000,
+      "duration": 8.271292,
+      "opsPerSec": 1209001
+    },
+    {
+      "name": "Query parse & eval (>)",
+      "iterations": 100000,
+      "duration": 29.519833,
+      "opsPerSec": 3387553
+    },
+    {
+      "name": "Query parse & eval (:=:)",
+      "iterations": 100000,
+      "duration": 27.863959,
+      "opsPerSec": 3588865
+    },
+    {
+      "name": "Query parse & eval (contains)",
+      "iterations": 100000,
+      "duration": 29.710875,
+      "opsPerSec": 3365771
+    }
+  ]
+}

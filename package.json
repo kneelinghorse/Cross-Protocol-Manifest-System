@@ -1,0 +1,25 @@
+{
+  "name": "cross-protocol-manifest-system",
+  "version": "1.0.0",
+  "description": "Zero-dependency cross-protocol manifest system",
+  "main": "utils.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "benchmark": "node benchmark.js",
+    "lint": "echo 'No linting configured (zero dependencies)'",
+    "format": "echo 'No formatting configured (zero dependencies)'"
+  },
+  "keywords": [
+    "manifest",
+    "protocol",
+    "zero-dependency",
+    "data-protocol"
+  ],
+  "author": "Cross-Protocol Manifest System Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

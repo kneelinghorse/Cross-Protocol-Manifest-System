@@ -1,0 +1,90 @@
+# Cross-Protocol Manifest System - .gitignore
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Build and Distribution
+dist/
+build/
+*.tgz
+*.tar.gz
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# CMOS Runtime Data (exclude runtime state, keep structure)
+cmos/runtime/boomerang/*
+!cmos/runtime/boomerang/.gitkeep
+cmos/telemetry/events/*
+!cmos/telemetry/events/.gitkeep
+!cmos/telemetry/events/database-health.jsonl
+
+# CMOS Distribution Backups (keep only current state)
+cmos/dist/backup-*/
+cmos/dist/*.tar.gz
+cmos/dist/*.tgz
+
+# CMOS Database (KEEP the database in git for this project)
+# We're intentionally tracking cmos.sqlite for project continuity
+# If you want to exclude it later, uncomment:
+# cmos/db/cmos.sqlite
+
+# CMOS Session Logs (tracked for project history)
+# cmos/SESSIONS.jsonl is intentionally tracked
+
+# Temporary Files
+tmp/
+temp/
+*.tmp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Miscellaneous
+*.bak
+*.swp
+*.cache
+.npmrc
+

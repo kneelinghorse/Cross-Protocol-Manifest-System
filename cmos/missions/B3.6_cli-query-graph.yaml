@@ -1,0 +1,305 @@
+# Mission: B3.6 CLI Query & Graph Commands
+# Sprint: Sprint 3 - Phase 3 Agent & Semantic Protocols
+
+missionId: "B3.6_cli-query-graph"
+version: "1.0.0"
+
+objective: |
+  Extend proto.js CLI with query and graph commands. Implement query DSL for finding manifests across protocols
+  and generate Mermaid graph visualizations of protocol relationships and dependencies.
+  Enable developers to discover and visualize cross-protocol relationships easily.
+
+context: |
+  The proto.js CLI currently supports validate, diff, and generate migration commands (from Mission B1.3).
+  This mission adds two powerful discovery commands:
+  
+  1. **proto query**: Find manifests using query DSL
+     - Example: proto query 'governance.policy.classification:=:pii'
+     - Example: proto query 'agent.capabilities.tools:contains:refund'
+  
+  2. **proto graph**: Visualize protocol relationships
+     - Example: proto graph agent.support.json --format=mermaid
+     - Example: proto graph data.users.json --show-dependencies
+  
+  As described in foundational-docs/Cross-Protocol Manifest System-k2.md Section 14 (Phase 3).
+
+successCriteria:
+  - "CLI command: proto query <expression> working"
+  - "Query DSL supports: :=:, contains, >, <, >=, <=, operators"
+  - "Query searches across all protocol types (data, event, api, agent, semantic)"
+  - "Query results show manifest URN, type, and matched fields"
+  - "CLI command: proto graph <manifest> working"
+  - "Graph output formats: mermaid, json, dot"
+  - "Graph shows: dependencies, URN references, protocol relationships"
+  - "Graph supports filtering: --show-dependencies, --show-urns, --depth=N"
+  - "CLI startup time maintained ≤500ms"
+  - "Comprehensive help text and examples"
+  - "Test suite for CLI commands"
+  - "Integration with URN resolver service"
+
+deliverables:
+  - "Updated proto.js with query and graph commands"
+  - "CLI test suite for new commands"
+  - "Usage documentation with examples"
+  - "Graph visualization examples (Mermaid diagrams)"
+  - "Integration tests with URN resolver"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Query DSL enables manifest discovery without external tools"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Mermaid graphs provide visual understanding of system"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "CLI tools lower barrier to entry for developers"
+      sourceMission: "Open source project philosophy"
+      
+  implementationScope:
+    coreDeliverable: "proto query and proto graph commands"
+    outOfScope:
+      - "Interactive query builder UI"
+      - "Graph layouts beyond Mermaid"
+      - "Web-based graph visualization"
+      - "Query language beyond current DSL"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for CLI implementation
+          Secondary worker: implementation.frontend for graph visualization
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+    workerManifestPath: "workers/manifest.yaml"
+
+  validationProtocol:
+    - validator: "Gemini"
+      focus: "CLI usability and documentation quality"
+    - validator: "Claude"
+      focus: "Query DSL correctness and graph generation"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "CLI follows Node.js best practices"
+      - "Help text is clear and comprehensive"
+      - "Query DSL matches existing query() implementations"
+      - "Mermaid output is valid syntax"
+      - "Performance meets startup time target"
+
+  failureEscalation:
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation"
+
+  qualityGates:
+    preCommit:
+      - "All CLI tests pass"
+      - "Help text reviewed for clarity"
+      - "Examples tested and working"
+      - "Startup time ≤500ms verified"
+      
+    postImplementation:
+      - "Integration test with URN resolver"
+      - "Test with all protocol types"
+      - "Documentation examples validated"
+
+  handoffContext:
+    completed:
+      - "proto query command operational"
+      - "proto graph command operational"
+      - "CLI documentation updated"
+      - "Integration with URN resolver complete"
+    interfaces:
+      - "Command: proto query <expression> [options]"
+      - "Command: proto graph <manifest> [options]"
+      - "Option: --format=json|yaml|mermaid|dot"
+      - "Option: --depth=N for graph traversal"
+      - "Option: --show-dependencies, --show-urns"
+    assumptions:
+      - "URN resolver service available"
+      - "Manifest directory structure known"
+    nextMission: "B3.7: Integration Tests & Documentation"
+    blockers: []
+    researchRequired: false
+    dependencies:
+      - "B3.5_urn-resolver (requires)"
+
+---
+
+# Implementation Notes
+
+## CLI Commands
+
+### proto query
+**Usage**: `proto query <expression> [options]`
+
+**Options**:
+- `--manifest-dir=<path>` - Directory containing manifests (default: ./manifests)
+- `--type=<protocol>` - Filter by protocol type (data, event, api, agent, semantic)
+- `--format=json|yaml|table` - Output format (default: table)
+- `--limit=N` - Limit results (default: 10)
+
+**Examples**:
+```bash
+# Find all PII datasets
+proto query 'governance.policy.classification:=:pii'
+
+# Find APIs with authentication
+proto query 'api.security.schemes:contains:oauth2'
+
+# Find agents with specific capability
+proto query 'agent.capabilities.tools:contains:refund'
+
+# Numeric comparisons
+proto query 'api.rateLimit.requests:>:1000'
+```
+
+**Output**:
+```
+┌─────────────────────────────────────────────────────────┐
+│ Query: governance.policy.classification:=:pii          │
+├─────────────────────────────────────────────────────────┤
+│ URN: urn:proto:data:user_events@v1.1.1                 │
+│ Type: data                                              │
+│ Match: governance.policy.classification = "pii"         │
+├─────────────────────────────────────────────────────────┤
+│ URN: urn:proto:data:transactions@v2.0.0                │
+│ Type: data                                              │
+│ Match: governance.policy.classification = "pii"         │
+└─────────────────────────────────────────────────────────┘
+Found 2 manifests matching query
+```
+
+### proto graph
+**Usage**: `proto graph <manifest> [options]`
+
+**Options**:
+- `--format=mermaid|json|dot` - Output format (default: mermaid)
+- `--depth=N` - Traversal depth (default: 3)
+- `--show-dependencies` - Show inter-mission dependencies
+- `--show-urns` - Show all URN references
+- `--output=<file>` - Write to file instead of stdout
+
+**Examples**:
+```bash
+# Generate Mermaid graph
+proto graph manifests/agent/support.json --format=mermaid
+
+# Show dependencies
+proto graph manifests/data/users.json --show-dependencies
+
+# Limit depth
+proto graph manifests/api/billing.json --depth=2
+
+# Output to file
+proto graph manifests/agent/support.json --output=graph.mmd
+```
+
+**Mermaid Output Example**:
+```mermaid
+graph TD
+  A[agent:support@v1.0.0]
+  A -->|requires| B[api:billing@v2.0.0]
+  A -->|requires| C[data:user_events@v1.1.1]
+  B -->|consumes| D[event:payment.received@v1.0.0]
+  C -->|produces| D
+```
+
+## Implementation
+
+### Query Command
+```javascript
+async function queryCommand(expression, options) {
+  const manifestDir = options.manifestDir || './manifests';
+  const protocolType = options.type;
+  
+  // Load all manifests
+  const manifests = await loadManifests(manifestDir, protocolType);
+  
+  // Parse query expression
+  const query = parseQuery(expression);
+  
+  // Filter manifests
+  const results = manifests.filter(m => {
+    const protocol = createProtocol(m);
+    return protocol.match(expression);
+  });
+  
+  // Format output
+  return formatResults(results, options.format);
+}
+```
+
+### Graph Command
+```javascript
+async function graphCommand(manifestPath, options) {
+  const manifest = await loadManifest(manifestPath);
+  const resolver = new URNResolver(options);
+  
+  // Build graph
+  const graph = await buildGraph(manifest, resolver, options.depth);
+  
+  // Format output
+  switch (options.format) {
+    case 'mermaid':
+      return generateMermaid(graph);
+    case 'json':
+      return JSON.stringify(graph, null, 2);
+    case 'dot':
+      return generateDot(graph);
+  }
+}
+```
+
+### Graph Building
+```javascript
+async function buildGraph(manifest, resolver, depth, visited = new Set()) {
+  const urn = manifest.urn || generateURN(manifest);
+  if (visited.has(urn) || depth <= 0) return null;
+  
+  visited.add(urn);
+  const node = { urn, type: manifest.type, edges: [] };
+  
+  // Find URN references
+  const urns = extractURNs(manifest);
+  
+  for (const targetURN of urns) {
+    try {
+      const target = await resolver.resolveURN(targetURN);
+      const targetNode = await buildGraph(target, resolver, depth - 1, visited);
+      if (targetNode) {
+        node.edges.push({ target: targetURN, relationship: 'requires' });
+      }
+    } catch (error) {
+      node.edges.push({ target: targetURN, relationship: 'unresolved' });
+    }
+  }
+  
+  return node;
+}
+```
+
+## Test Categories
+1. CLI argument parsing
+2. Query expression parsing
+3. Query execution across protocol types
+4. Graph generation (Mermaid, JSON, DOT)
+5. URN resolution integration
+6. Output formatting
+7. Error handling
+8. Performance (startup time)
+

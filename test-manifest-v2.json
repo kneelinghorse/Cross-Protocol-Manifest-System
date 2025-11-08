@@ -1,0 +1,86 @@
+{
+  "dataset": {
+    "name": "user_events",
+    "type": "fact-table",
+    "lifecycle": {
+      "status": "active"
+    }
+  },
+  "schema": {
+    "primary_key": "event_id",
+    "fields": {
+      "event_id": {
+        "type": "string",
+        "required": true
+      },
+      "user_id": {
+        "type": "string",
+        "required": true
+      },
+      "email": {
+        "type": "string",
+        "pii": true,
+        "required": true
+      },
+      "amount": {
+        "type": "number"
+      },
+      "event_date": {
+        "type": "date"
+      },
+      "country": {
+        "type": "string"
+      }
+    }
+  },
+  "lineage": {
+    "sources": [
+      {
+        "type": "service",
+        "id": "user-service"
+      }
+    ],
+    "consumers": [
+      {
+        "type": "model",
+        "id": "churn-ml"
+      },
+      {
+        "type": "external",
+        "id": "vendor-x"
+      }
+    ]
+  },
+  "operations": {
+    "refresh": {
+      "schedule": "hourly",
+      "expected_by": "08:00Z"
+    },
+    "retention": "2-years"
+  },
+  "governance": {
+    "policy": {
+      "classification": "pii",
+      "legal_basis": "gdpr"
+    },
+    "storage_residency": {
+      "region": "eu",
+      "vendor": "s3",
+      "encrypted_at_rest": true
+    }
+  },
+  "quality": {
+    "freshness_ts": "2025-09-28T08:15:00Z",
+    "row_count_estimate": 123456,
+    "null_rate": {
+      "email": 0.02
+    }
+  },
+  "catalog": {
+    "owner": "identity-team",
+    "tags": [
+      "events",
+      "pii"
+    ]
+  }
+}
