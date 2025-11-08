@@ -1,0 +1,18 @@
+{
+  "urn": "urn:proto:data:user_events@v1.1.1",
+  "type": "data",
+  "name": "User Events Dataset",
+  "version": "1.1.1",
+  "governance": {
+    "policy": {
+      "classification": "pii"
+    }
+  },
+  "schema": {
+    "fields": [
+      {"name": "user_id", "type": "string"},
+      {"name": "event_type", "type": "string"},
+      {"name": "timestamp", "type": "datetime"}
+    ]
+  }
+}

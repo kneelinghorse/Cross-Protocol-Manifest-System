@@ -1,0 +1,15 @@
+{
+  "urn": "urn:proto:agent:support@v1.0.0",
+  "type": "agent",
+  "name": "Customer Support Agent",
+  "version": "1.0.0",
+  "capabilities": {
+    "tools": ["refund", "escalate", "lookup_order"]
+  },
+  "dependencies": {
+    "requires": [
+      "urn:proto:api:billing@v2.0.0",
+      "urn:proto:data:user_events@v1.1.1"
+    ]
+  }
+}

@@ -6,11 +6,11 @@
  * @version 1.0.0
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Import protocol implementations
-const { createDataProtocol } = require('./data_protocol_v_1_1_1.js');
+import { createDataProtocol } from './data_protocol_v_1_1_1.js';
 
 /**
  * CLI Argument Parser
@@ -33,8 +33,8 @@ function parseArgs(args) {
   result.command = args[0];
   let i = 1;
 
-  // Handle generate command with subcommand
-  if (result.command === 'generate' && args.length > 1) {
+  // Handle commands with subcommands (generate, query, graph)
+  if ((result.command === 'generate' || result.command === 'query' || result.command === 'graph') && args.length > 1) {
     result.subcommand = args[1];
     i = 2;
   }
@@ -252,19 +252,36 @@ Commands:
   validate              Validate a manifest file
   diff                  Compare two manifests
   generate migration    Generate migration script between manifests
+  query                 Search manifests using query DSL
+  graph                 Generate graph visualization of protocol relationships
 
 Options:
   --manifest=<file>     Path to manifest file (JSON)
   --from=<file>         Source manifest file for diff/migration
   --to=<file>           Target manifest file for diff/migration
-  --format=<format>     Output format: json, text (default: text)
+  --format=<format>     Output format: json, text, table (default: text)
   --help                Show this help message
+
+Query Options:
+  --manifest-dir=<path> Directory containing manifests (default: ./manifests)
+  --type=<protocol>     Filter by protocol type (data, event, api, agent, semantic)
+  --limit=N            Limit results (default: 10)
+
+Graph Options:
+  --format=mermaid|json|dot  Output format (default: mermaid)
+  --depth=N           Traversal depth (default: 3)
+  --show-dependencies Show inter-mission dependencies
+  --show-urns         Show all URN references
+  --output=<file>     Write to file instead of stdout
 
 Examples:
   proto validate --manifest=dataset.json
   proto diff --from=v1.json --to=v2.json --format=json
   proto generate migration --from=v1.json --to=v2.json
-  proto validate --manifest=dataset.json --format=text
+  proto query 'governance.policy.classification:=:pii'
+  proto query 'agent.capabilities.tools:contains:refund' --type=agent
+  proto graph manifests/agent/support.json --format=mermaid
+  proto graph manifests/data/users.json --show-dependencies --depth=2
 
 Exit Codes:
   0 - Success
@@ -384,6 +401,407 @@ async function handleGenerateMigration(parsed) {
 }
 
 /**
+ * Parse query expression into structured query object
+ * @param {string} expression - Query expression like 'field:=:value'
+ * @returns {Object} Parsed query with field, operator, value
+ */
+function parseQueryExpression(expression) {
+  const operators = [':=:', ':contains:', '>:', '<:', '>=:', '<=:', ':=array:'];
+  
+  for (const op of operators) {
+    const parts = expression.split(op);
+    if (parts.length === 2) {
+      return {
+        field: parts[0].trim(),
+        operator: op,
+        value: parts[1].trim().replace(/^["']|["']$/g, '')
+      };
+    }
+  }
+  
+  throw new Error(`Invalid query expression: ${expression}. Supported operators: ${operators.join(', ')}`);
+}
+
+/**
+ * Get nested value from object using dot notation
+ * @param {Object} obj - Object to search
+ * @param {string} path - Dot notation path (e.g., 'governance.policy.classification')
+ * @returns {*} Value at path or undefined
+ */
+function getNestedValue(obj, path) {
+  return path.split('.').reduce((current, key) => {
+    return current && current[key] !== undefined ? current[key] : undefined;
+  }, obj);
+}
+
+/**
+ * Check if value matches query criteria
+ * @param {*} actual - Actual value from manifest
+ * @param {string} operator - Query operator
+ * @param {*} expected - Expected value from query
+ * @returns {boolean} True if matches
+ */
+function matchesQuery(actual, operator, expected) {
+  if (actual === undefined) return false;
+  
+  // Handle array values
+  if (Array.isArray(actual)) {
+    if (operator === ':contains:') {
+      return actual.some(item => item.toString().toLowerCase().includes(expected.toLowerCase()));
+    }
+    if (operator === ':=array:') {
+      const expectedArray = expected.split(',').map(v => v.trim());
+      return expectedArray.every(val => actual.includes(val));
+    }
+    return false;
+  }
+  
+  // Handle string values
+  if (typeof actual === 'string') {
+    if (operator === ':contains:') {
+      return actual.toLowerCase().includes(expected.toLowerCase());
+    }
+    if (operator === ':=:') {
+      return actual.toLowerCase() === expected.toLowerCase();
+    }
+    return false;
+  }
+  
+  // Handle numeric comparisons
+  const actualNum = Number(actual);
+  const expectedNum = Number(expected);
+  
+  if (!isNaN(actualNum) && !isNaN(expectedNum)) {
+    switch (operator) {
+      case '>:': return actualNum > expectedNum;
+      case '<:': return actualNum < expectedNum;
+      case '>=:': return actualNum >= expectedNum;
+      case '<=:': return actualNum <= expectedNum;
+      case ':=:': return actualNum === expectedNum;
+    }
+  }
+  
+  // Default equality check
+  if (operator === ':=:') {
+    return actual == expected;
+  }
+  
+  return false;
+}
+
+/**
+ * Load all manifests from directory
+ * @param {string} dirPath - Directory path
+ * @param {string} protocolType - Optional protocol type filter
+ * @returns {Array} Array of manifest objects
+ */
+async function loadManifestsFromDir(dirPath, protocolType) {
+  const fullPath = path.resolve(dirPath);
+  
+  if (!fs.existsSync(fullPath)) {
+    throw new Error(`Manifest directory not found: ${dirPath}`);
+  }
+  
+  const manifests = [];
+  const files = fs.readdirSync(fullPath).filter(f => f.endsWith('.json'));
+  
+  for (const file of files) {
+    try {
+      const filePath = path.join(fullPath, file);
+      const content = fs.readFileSync(filePath, 'utf8');
+      const manifest = JSON.parse(content);
+      
+      // Filter by protocol type if specified
+      if (!protocolType || manifest.type === protocolType) {
+        manifests.push(manifest);
+      }
+    } catch (error) {
+      // Skip invalid files
+      console.error(`Warning: Skipping invalid manifest ${file}: ${error.message}`);
+    }
+  }
+  
+  return manifests;
+}
+
+/**
+ * Format query results for table output
+ * @param {Array} results - Query results
+ * @returns {string} Formatted table
+ */
+function formatQueryResults(results) {
+  if (results.length === 0) {
+    return 'No manifests found matching query';
+  }
+  
+  const lines = [];
+  lines.push(`Found ${results.length} manifest(s) matching query:`);
+  lines.push('');
+  
+  results.forEach((result, index) => {
+    lines.push(`${index + 1}. URN: ${result.urn || 'unknown'}`);
+    lines.push(`   Type: ${result.type || 'unknown'}`);
+    lines.push(`   Match: ${result.matchPath} ${result.operator} ${JSON.stringify(result.matchValue)}`);
+    if (result.file) {
+      lines.push(`   File: ${result.file}`);
+    }
+    lines.push('');
+  });
+  
+  return lines.join('\n');
+}
+
+/**
+ * Query command handler
+ * @param {Object} parsed - Parsed arguments
+ * @returns {Promise<number>} Exit code
+ */
+async function handleQuery(parsed) {
+  const { options } = parsed;
+  
+  if (!parsed.subcommand) {
+    console.error('Error: Query expression is required');
+    return 1;
+  }
+  
+  try {
+    const query = parseQueryExpression(parsed.subcommand);
+    const manifestDir = options['manifest-dir'] || './manifests';
+    const protocolType = options.type;
+    const limit = parseInt(options.limit) || 10;
+    
+    // Load manifests
+    const manifests = await loadManifestsFromDir(manifestDir, protocolType);
+    
+    // Filter manifests based on query
+    const results = [];
+    for (const manifest of manifests) {
+      const value = getNestedValue(manifest, query.field);
+      if (matchesQuery(value, query.operator, query.value)) {
+        results.push({
+          urn: manifest.urn,
+          type: manifest.type,
+          matchPath: query.field,
+          operator: query.operator,
+          matchValue: value,
+          manifest: manifest
+        });
+        
+        if (results.length >= limit) break;
+      }
+    }
+    
+    // Format output
+    const format = options.format || 'table';
+    let output;
+    if (format === 'json') {
+      output = JSON.stringify(results, null, 2);
+    } else if (format === 'table') {
+      output = formatQueryResults(results);
+    } else {
+      output = formatOutput(results, format);
+    }
+    
+    console.log(output);
+    return 0;
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    return 1;
+  }
+}
+
+/**
+ * Extract URN references from manifest
+ * @param {Object} manifest - Manifest object
+ * @returns {Array} Array of URN strings
+ */
+function extractURNs(manifest) {
+  const urns = new Set();
+  
+  // Search for URN patterns in the entire manifest
+  const jsonStr = JSON.stringify(manifest);
+  const urnRegex = /urn:proto:[^"'\s]+/g;
+  const matches = jsonStr.match(urnRegex);
+  
+  if (matches) {
+    matches.forEach(urn => urns.add(urn));
+  }
+  
+  // Remove self-reference
+  if (manifest.urn) {
+    urns.delete(manifest.urn);
+  }
+  
+  return Array.from(urns);
+}
+
+/**
+ * Build graph structure from manifest
+ * @param {Object} manifest - Starting manifest
+ * @param {number} depth - Traversal depth
+ * @param {Set} visited - Visited URNs to prevent cycles
+ * @returns {Object} Graph node structure
+ */
+async function buildGraph(manifest, depth, visited = new Set()) {
+  const urn = manifest.urn || 'unknown';
+  
+  if (visited.has(urn) || depth <= 0) {
+    return null;
+  }
+  
+  visited.add(urn);
+  
+  const node = {
+    urn: urn,
+    type: manifest.type || 'unknown',
+    edges: []
+  };
+  
+  // Extract URN references from manifest
+  const referencedURNs = extractURNs(manifest);
+  
+  for (const targetURN of referencedURNs) {
+    node.edges.push({
+      target: targetURN,
+      relationship: 'references'
+    });
+  }
+  
+  return node;
+}
+
+/**
+ * Generate Mermaid graph syntax
+ * @param {Object} graph - Graph structure
+ * @returns {string} Mermaid syntax
+ */
+function generateMermaid(graph) {
+  if (!graph) return '';
+  
+  const lines = ['graph TD'];
+  const visited = new Set();
+  
+  function processNode(node, parentId = null) {
+    if (!node || visited.has(node.urn)) return;
+    
+    visited.add(node.urn);
+    const nodeId = node.urn.replace(/[^a-zA-Z0-9]/g, '_');
+    const label = `${node.type}:${node.urn.split(':').pop()}`;
+    
+    lines.push(`  ${nodeId}[${label}]`);
+    
+    if (parentId) {
+      lines.push(`  ${parentId} -->|references| ${nodeId}`);
+    }
+    
+    if (node.edges) {
+      for (const edge of node.edges) {
+        const targetId = edge.target.replace(/[^a-zA-Z0-9]/g, '_');
+        lines.push(`  ${nodeId} -->|${edge.relationship}| ${targetId}[${edge.target}]`);
+      }
+    }
+  }
+  
+  processNode(graph);
+  return lines.join('\n');
+}
+
+/**
+ * Generate DOT graph syntax
+ * @param {Object} graph - Graph structure
+ * @returns {string} DOT syntax
+ */
+function generateDot(graph) {
+  if (!graph) return '';
+  
+  const lines = ['digraph G {', '  rankdir=TB;'];
+  const visited = new Set();
+  
+  function processNode(node, parentId = null) {
+    if (!node || visited.has(node.urn)) return;
+    
+    visited.add(node.urn);
+    const nodeId = node.urn.replace(/[^a-zA-Z0-9]/g, '_');
+    const label = `${node.type}:${node.urn.split(':').pop()}`;
+    
+    lines.push(`  ${nodeId} [label="${label}"];`);
+    
+    if (parentId) {
+      lines.push(`  ${parentId} -> ${nodeId} [label="references"];`);
+    }
+    
+    if (node.edges) {
+      for (const edge of node.edges) {
+        const targetId = edge.target.replace(/[^a-zA-Z0-9]/g, '_');
+        lines.push(`  ${nodeId} -> ${targetId} [label="${edge.relationship}"];`);
+      }
+    }
+  }
+  
+  processNode(graph);
+  lines.push('}');
+  return lines.join('\n');
+}
+
+/**
+ * Graph command handler
+ * @param {Object} parsed - Parsed arguments
+ * @returns {Promise<number>} Exit code
+ */
+async function handleGraph(parsed) {
+  const { options } = parsed;
+  
+  if (!parsed.subcommand) {
+    console.error('Error: Manifest file path is required');
+    return 1;
+  }
+  
+  try {
+    const manifestPath = parsed.subcommand;
+    const manifest = loadManifest(manifestPath);
+    const depth = parseInt(options.depth) || 3;
+    const format = options.format || 'mermaid';
+    
+    // Build graph structure
+    const graph = await buildGraph(manifest, depth);
+    
+    if (!graph) {
+      console.log('No graph data available');
+      return 0;
+    }
+    
+    // Generate output based on format
+    let output;
+    switch (format) {
+      case 'mermaid':
+        output = generateMermaid(graph);
+        break;
+      case 'dot':
+        output = generateDot(graph);
+        break;
+      case 'json':
+        output = JSON.stringify(graph, null, 2);
+        break;
+      default:
+        throw new Error(`Unsupported format: ${format}`);
+    }
+    
+    // Handle output file option
+    if (options.output) {
+      fs.writeFileSync(options.output, output, 'utf8');
+      console.log(`Graph written to ${options.output}`);
+    } else {
+      console.log(output);
+    }
+    
+    return 0;
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    return error.message.includes('not found') ? 3 : 4;
+  }
+}
+
+/**
  * Main CLI handler
  * @param {string[]} args - Command line arguments
  * @returns {Promise<number>} Exit code
@@ -422,6 +840,12 @@ async function main(args) {
         exitCode = 1;
       }
       break;
+    case 'query':
+      exitCode = await handleQuery(parsed);
+      break;
+    case 'graph':
+      exitCode = await handleGraph(parsed);
+      break;
     default:
       console.error(`Error: Unknown command: ${parsed.command}`);
       showHelp();
@@ -438,7 +862,7 @@ async function main(args) {
 }
 
 // Run CLI if executed directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main(process.argv.slice(2))
     .then(exitCode => process.exit(exitCode))
     .catch(error => {
@@ -447,4 +871,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { main, parseArgs, loadManifest, formatOutput };
+export { main, parseArgs, loadManifest, formatOutput };
