@@ -271,7 +271,7 @@ test('validateEvent: validates against schema', () => {
 });
 
 test('validateEvent: detects missing required fields', () => {
-  const protocol = createEventProtocol({ eventSchema: validEventSchema });
+  const protocol = createEventProtocol({ validateEvents: true, eventSchema: validEventSchema });
   const invalidEvent = { eventId: 'evt-123', timestamp: Date.now() }; // missing source
   const result = protocol.validateEvent(invalidEvent);
   assert(result.valid === false, 'Should reject invalid event');
@@ -279,7 +279,7 @@ test('validateEvent: detects missing required fields', () => {
 });
 
 test('validateEvent: detects invalid field types', () => {
-  const protocol = createEventProtocol({ eventSchema: validEventSchema });
+  const protocol = createEventProtocol({ validateEvents: true, eventSchema: validEventSchema });
   const invalidEvent = {
     eventId: 'evt-123',
     timestamp: 'not-a-number', // should be number
@@ -315,7 +315,7 @@ test('validateEvent: handles nested object validation', () => {
 });
 
 test('validateEvent: handles null and undefined', () => {
-  const protocol = createEventProtocol({ eventSchema: validEventSchema });
+  const protocol = createEventProtocol({ validateEvents: true, eventSchema: validEventSchema });
   
   const result1 = protocol.validateEvent(null);
   assert(result1.valid === false, 'Should reject null event');
@@ -495,6 +495,9 @@ test('security: validates event schema prevents bypass', () => {
   
   bypassAttempts.forEach((attempt, index) => {
     const result = protocol.validateEvent(attempt);
+    if (result.valid === true) {
+      console.log('Bypass attempt', index + 1, 'passed validation:', attempt);
+    }
     assert(result.valid === false, `Should reject bypass attempt ${index + 1}`);
   });
 });
@@ -530,6 +533,9 @@ test('security: prevents prototype pollution', () => {
   
   pollutionAttempts.forEach((attempt, index) => {
     const result = protocol.validateEvent(attempt);
+    if (result.valid === true) {
+      console.log('Pollution attempt', index + 1, 'passed validation:', Object.keys(attempt));
+    }
     assert(result.valid === false, `Should prevent prototype pollution attempt ${index + 1}`);
   });
 });

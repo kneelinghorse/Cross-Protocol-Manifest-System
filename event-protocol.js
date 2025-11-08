@@ -165,10 +165,6 @@ function createEventProtocol(config = {}) {
    * @returns {Object} Validation result {valid: boolean, errors: string[]}
    */
   function validateEvent(event) {
-    if (!validateEvents || !eventSchema) {
-      return { valid: true, errors: [] };
-    }
-
     const errors = [];
 
     // Reject null or undefined events
@@ -177,10 +173,51 @@ function createEventProtocol(config = {}) {
       return { valid: false, errors };
     }
 
+    // Check if event is an object
+    if (typeof event !== 'object' || Array.isArray(event)) {
+      errors.push('Event must be a plain object');
+      return { valid: false, errors };
+    }
+
+    // If no schema validation enabled, return early
+    if (!validateEvents || !eventSchema) {
+      return { valid: errors.length === 0, errors };
+    }
+
+    // Security: Reject events with function values (prevents injection)
+    function checkForFunctions(obj, path = '') {
+      for (const [key, value] of Object.entries(obj)) {
+        if (typeof value === 'function') {
+          errors.push(`Security: Event contains function at ${path ? path + '.' : ''}${key}`);
+        } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+          checkForFunctions(value, path ? `${path}.${key}` : key);
+        }
+      }
+    }
+    checkForFunctions(event);
+
+    // Check for prototype pollution attempts in event keys (only direct properties)
+    const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
+    for (const key of dangerousKeys) {
+      if (Object.prototype.hasOwnProperty.call(event, key)) {
+        errors.push(`Security: Event contains dangerous key: ${key}`);
+      }
+    }
+
+    // Check for dangerous patterns in property names (e.g., '__proto__.polluted')
+    const dangerousPatterns = ['__proto__', 'constructor', 'prototype'];
+    for (const key of Object.keys(event)) {
+      for (const pattern of dangerousPatterns) {
+        if (key.includes(pattern)) {
+          errors.push(`Security: Event contains dangerous pattern in key: ${key}`);
+        }
+      }
+    }
+
     // Check required fields from schema.required array (JSON Schema format)
     if (eventSchema.required && Array.isArray(eventSchema.required)) {
       for (const fieldName of eventSchema.required) {
-        if (event[fieldName] === undefined || event[fieldName] === null) {
+        if (!(fieldName in event) || event[fieldName] === undefined || event[fieldName] === null) {
           errors.push(`Missing required field: ${fieldName}`);
         }
       }
@@ -190,12 +227,14 @@ function createEventProtocol(config = {}) {
     if (eventSchema.properties) {
       for (const [fieldName, fieldDef] of Object.entries(eventSchema.properties)) {
         // Check property-level required flag (for backward compatibility with test schema)
-        if (fieldDef.required && (event[fieldName] === undefined || event[fieldName] === null)) {
-          errors.push(`Missing required field: ${fieldName}`);
+        if (fieldDef.required === true) {
+          if (!(fieldName in event) || event[fieldName] === undefined || event[fieldName] === null) {
+            errors.push(`Missing required field: ${fieldName}`);
+          }
         }
         
-        // Check field types
-        if (event[fieldName] !== undefined && event[fieldName] !== null) {
+        // Check field types (only if field exists and has a value)
+        if (fieldName in event && event[fieldName] !== undefined && event[fieldName] !== null) {
           const actualType = typeof event[fieldName];
           const expectedType = fieldDef.type;
           
@@ -210,15 +249,30 @@ function createEventProtocol(config = {}) {
       }
     }
 
-    // Check for prototype pollution attempts (only for direct property access)
-    if (event && typeof event === 'object' && !Array.isArray(event)) {
-      const dangerousKeys = ['__proto__', 'constructor.prototype'];
-      for (const key of dangerousKeys) {
-        if (Object.prototype.hasOwnProperty.call(event, key)) {
-          errors.push(`Security: Event contains dangerous key: ${key}`);
+    // Additional security: Check for prototype pollution in nested objects
+    function checkNestedObjects(obj, path = '') {
+      if (obj && typeof obj === 'object' && !Array.isArray(obj)) {
+        // Check direct property access
+        for (const key of dangerousKeys) {
+          if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            errors.push(`Security: Event contains dangerous key at ${path || 'root'}: ${key}`);
+          }
+        }
+        // Check for dangerous patterns in keys
+        for (const key of Object.keys(obj)) {
+          for (const pattern of dangerousPatterns) {
+            if (key.includes(pattern)) {
+              errors.push(`Security: Event contains dangerous pattern at ${path || 'root'}: ${key}`);
+            }
+          }
+          const value = obj[key];
+          if (value && typeof value === 'object' && !Array.isArray(value)) {
+            checkNestedObjects(value, path ? `${path}.${key}` : key);
+          }
         }
       }
     }
+    checkNestedObjects(event);
 
     return {
       valid: errors.length === 0,

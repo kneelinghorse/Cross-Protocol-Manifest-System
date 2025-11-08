@@ -171,7 +171,8 @@ registerValidator('governance.pii_policy', (m) => {
     if (cls !== 'pii') {
       issues.push({ path: 'governance.policy.classification', msg: 'PII fields present → classification should be "pii"', level: 'warn' });
     }
-    if (m?.governance?.storage_residency?.encrypted_at_rest !== true) {
+    // Only check encryption if storage_residency is defined
+    if (m?.governance?.storage_residency && m?.governance?.storage_residency?.encrypted_at_rest !== true) {
       issues.push({ path: 'governance.storage_residency.encrypted_at_rest', msg: 'PII datasets should be encrypted at rest', level: 'warn' });
     }
   }
@@ -278,15 +279,23 @@ function diff(a, b) {
   for (const c of changes) {
     if (c.path === 'schema.primary_key') breaking.push({ ...c, reason: 'primary key changed' });
     if (c.path.startsWith('schema.fields.') && c.path.endsWith('.type')) breaking.push({ ...c, reason: 'column type changed' });
-    if (c.path.startsWith('schema.fields.') && c.to === undefined) breaking.push({ ...c, reason: 'column dropped' });
+    if (c.path.startsWith('schema.fields.') && c.to === undefined && c.from !== undefined) {
+      // Check if this is a field removal (schema.fields.fieldName) not a property change
+      const parts = c.path.split('.');
+      if (parts.length === 3) {
+        breaking.push({ ...c, reason: 'column dropped' });
+      }
+    }
     if (c.path.startsWith('schema.fields.') && c.path.endsWith('.required') && c.to === true) breaking.push({ ...c, reason: 'required flag changed' });
-    if (c.path.startsWith('schema.fields.') && c.to === undefined && c.from !== undefined) breaking.push({ ...c, reason: 'column dropped' });
-    if (c.path.startsWith('schema.fields.') && c.path.endsWith('.type')) breaking.push({ ...c, reason: 'column type changed' });
     if (c.path.startsWith('schema.fields.') && c.path.endsWith('.pii')) breaking.push({ ...c, reason: 'pii flag changed' });
     if (c.path === 'dataset.lifecycle.status' && dget(a, 'dataset.lifecycle.status') === 'active' && dget(b, 'dataset.lifecycle.status') === 'deprecated') {
       breaking.push({ ...c, reason: 'lifecycle downgrade' });
     }
     if (c.path === 'schema_hash') breaking.push({ ...c, reason: 'schema changed' });
+    // Detect required field addition as breaking
+    if (c.path.startsWith('schema.fields.') && c.from === undefined && c.to && c.to.required === true) {
+      breaking.push({ ...c, reason: 'required flag changed', path: c.path + '.required' });
+    }
   }
 
   const significant = changes.filter(c => c.path.startsWith('governance.') || c.path.startsWith('lineage.') || c.path.startsWith('operations.refresh'));
@@ -322,10 +331,11 @@ function generateMigration(fromManifest, toManifest) {
       }
     }
     
-    // Field removal
+    // Field removal - detect when a field is completely removed
     if (p.startsWith('schema.fields.') && change.to === undefined && change.from !== undefined) {
       const parts = p.split('.');
-      if (parts.length === 3) { // schema.fields.fieldName
+      // Check if this is a field removal (schema.fields.fieldName) not a property change
+      if (parts.length === 3) {
         const fieldName = parts[2];
         steps.push(`DROP COLUMN ${fieldName}`);
       }
@@ -355,7 +365,9 @@ function generateMigration(fromManifest, toManifest) {
     }
   }
   
-  return { steps, notes: d.breaking.map(b => `BREAKING: ${b.reason} @ ${b.path}`) };
+  // Always include breaking change notes from diff breaking changes
+  const notes = d.breaking.map(b => `BREAKING: ${b.reason} @ ${b.path}`);
+  return { steps, notes };
 }
 
 // Additional generators
@@ -471,11 +483,19 @@ function createDataCatalog(protocols = []) {
     const warnings = [];
     const ms = asManifests();
     for (const m of ms) {
-      const anyPII = Object.values(m.schema?.fields || {}).some(f => f.pii === true);
+      const fields = m.schema?.fields || {};
+      const anyPII = Object.values(fields).some(f => f.pii === true);
       if (!anyPII) continue;
-      for (const c of (m.lineage?.consumers || [])) {
-        if ((c.type||'').toLowerCase() === 'external') {
-          warnings.push({ dataset: m.dataset?.name, consumer: c.id, msg: 'PII dataset consumed externally' });
+      
+      const consumers = m.lineage?.consumers || [];
+      for (const c of consumers) {
+        const consumerType = (c.type || '').toLowerCase();
+        if (consumerType === 'external') {
+          warnings.push({
+            dataset: m.dataset?.name,
+            consumer: c.id || 'unknown',
+            msg: 'PII dataset consumed externally'
+          });
         }
       }
     }
