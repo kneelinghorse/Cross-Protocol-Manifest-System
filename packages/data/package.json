@@ -1,0 +1,49 @@
+{
+  "name": "@proto/data",
+  "version": "0.4.0",
+  "private": false,
+  "description": "Data Protocol implementation for CPMS",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint .",
+    "check-size": "monosize --threshold 10kb"
+  },
+  "keywords": ["manifest", "protocol", "data", "validation"],
+  "author": "Cross-Protocol Manifest System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System",
+    "directory": "packages/data"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@proto/core": "workspace:*",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "monosize": "^0.3.0"
+  }
+}

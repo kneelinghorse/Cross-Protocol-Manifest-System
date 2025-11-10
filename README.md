@@ -5,6 +5,19 @@
 
 A declarative, self-describing protocol framework that transforms codebases into observable systems of record. By representing datasets, events, APIs, and AI agents as versioned, validated manifests, it enables automated SDK generation, compliance checking, migration synthesis, and cross-service impact analysis—**all with zero external dependencies**.
 
+## 📦 npm Packages
+
+| Package | Version | Description |
+|---------|---------|-------------|
+| [@proto/core](https://www.npmjs.com/package/@proto/core) | [![core](https://img.shields.io/npm/v/%40proto%2Fcore?label=%40proto%2Fcore)](https://www.npmjs.com/package/@proto/core) | Foundation utilities (hashing, canonical JSON, validator registry, query DSL). |
+| [@proto/data](https://www.npmjs.com/package/@proto/data) | [![data](https://img.shields.io/npm/v/%40proto%2Fdata?label=%40proto%2Fdata)](https://www.npmjs.com/package/@proto/data) | Data Protocol v1.1.1 with validators, diff, and migration synthesis. |
+| [@proto/event](https://www.npmjs.com/package/@proto/event) | [![event](https://img.shields.io/npm/v/%40proto%2Fevent?label=%40proto%2Fevent)](https://www.npmjs.com/package/@proto/event) | Runtime event engine with immutable publish/subscribe APIs. |
+| [@proto/api](https://www.npmjs.com/package/@proto/api) | [![api](https://img.shields.io/npm/v/%40proto%2Fapi?label=%40proto%2Fapi)](https://www.npmjs.com/package/@proto/api) | API Protocol v1.1.1 plus OpenAPI/SDK generation. |
+| [@proto/agent](https://www.npmjs.com/package/@proto/agent) | [![agent](https://img.shields.io/npm/v/%40proto%2Fagent?label=%40proto%2Fagent)](https://www.npmjs.com/package/@proto/agent) | Agent manifests, capability graphs, diff, and registries. |
+| [@proto/semantic](https://www.npmjs.com/package/@proto/semantic) | [![semantic](https://img.shields.io/npm/v/%40proto%2Fsemantic?label=%40proto%2Fsemantic)](https://www.npmjs.com/package/@proto/semantic) | Semantic Protocol v3.2.0 for intent/criticality analysis. |
+| [@proto/catalog](https://www.npmjs.com/package/@proto/catalog) | [![catalog](https://img.shields.io/npm/v/%40proto%2Fcatalog?label=%40proto%2Fcatalog)](https://www.npmjs.com/package/@proto/catalog) | URN-based catalog system with relationship + cycle detection. |
+| [@proto/cli](https://www.npmjs.com/package/@proto/cli) | [![cli](https://img.shields.io/npm/v/%40proto%2Fcli?label=%40proto%2Fcli)](https://www.npmjs.com/package/@proto/cli) | `proto` CLI for validate/diff/generate/query/graph commands. |
+
 ## 🎯 Core Philosophy
 
 **The manifest is the source of truth. Everything else is a derived artifact.**
@@ -30,10 +43,13 @@ A declarative, self-describing protocol framework that transforms codebases into
 
 ```bash
 # Install dependencies (dev only, protocols are zero-dependency)
-npm install
+pnpm install
 
-# Run tests
-npm test
+# Run root protocol tests
+pnpm test
+
+# Build and test all workspace packages
+pnpm build && pnpm test:workspace
 
 # Validate a manifest
 node proto.js validate data-manifest.json
@@ -121,7 +137,10 @@ node proto.js generate migration --from v1.json --to v2.json
 
 ```bash
 # Run all tests
-npm test
+pnpm test
+
+# Run package tasks via turbo
+pnpm test:workspace
 
 # Run specific protocol tests
 node --test data-protocol.test.js
@@ -138,6 +157,7 @@ node cmos/context/integration_test_runner.js
 - **CMOS Operations:** [operations-guide.md](cmos/docs/operations-guide.md)
 - **Getting Started:** [getting-started.md](cmos/docs/getting-started.md)
 - **Mission Templates:** [cmos/missions/templates/](cmos/missions/templates/)
+- **Publishing Runbook:** [docs/publishing/npm-publishing-runbook.md](docs/publishing/npm-publishing-runbook.md)
 
 ## 🛠️ CMOS Management
 
@@ -191,6 +211,12 @@ This is an open-source project. We balance providing great value to developers f
 - **Phase 4** (Planned): Documentation site, npm release
 - **Phase 5** (Future): VS Code extension, PostgreSQL adapter
 
+## 🔁 Release Automation
+
+- Independent versioning via [Changesets](https://github.com/changesets/changesets); run `pnpm changeset` for every mission-level change.
+- `.github/workflows/publish-packages.yml` installs with pnpm, runs `pnpm audit`, root/tests/builds, and either opens a Release PR or publishes on merge.
+- Detailed operational guidance (tokens, verification, rollback) lives in [docs/publishing/npm-publishing-runbook.md](docs/publishing/npm-publishing-runbook.md).
+
 ## 📝 License
 
 MIT License - See LICENSE file for details
@@ -204,4 +230,3 @@ Built with mission-driven development using CMOS orchestration system.
 **Current Sprint:** Sprint 3 Complete - Phase 3 Agent & Semantic Protocols
 **Last Updated:** 2025-11-08
 **Repository:** https://github.com/kneelinghorse/Cross-Protocol-Manifest-System
-

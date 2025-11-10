@@ -1,0 +1,52 @@
+{
+  "name": "@proto/cli",
+  "version": "0.4.0",
+  "private": false,
+  "description": "Proto CLI for validating, diffing, and generating manifests",
+  "type": "module",
+  "sideEffects": false,
+  "bin": {
+    "proto": "./dist/proto.js"
+  },
+  "main": "./dist/proto.js",
+  "module": "./dist/proto.js",
+  "exports": {
+    ".": "./dist/proto.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "cli",
+    "manifest",
+    "protocol",
+    "data"
+  ],
+  "author": "Cross-Protocol Manifest System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@proto/data": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -30,6 +30,7 @@ Thumbs.db
 # Build and Distribution
 dist/
 build/
+.turbo/
 *.tgz
 *.tar.gz
 
@@ -87,4 +88,3 @@ ENV/
 *.swp
 *.cache
 .npmrc
-
