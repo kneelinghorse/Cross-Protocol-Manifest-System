@@ -338,7 +338,7 @@ function diff(a, b) {
     if (c.path.startsWith('schema.fields.') && c.to === undefined && c.from !== undefined) {
       // Check if this is a field removal (schema.fields.fieldName) not a property change
       const parts = c.path.split('.');
-      if (parts.length === 3) {
+      if (parts.length === 3 && !c.path.includes('.type') && !c.path.includes('.required') && !c.path.includes('.pii') && !c.path.includes('.description')) {
         breaking.push({ ...c, reason: 'column dropped' });
       }
     }
@@ -351,13 +351,6 @@ function diff(a, b) {
     // Detect required field addition as breaking
     if (c.path.startsWith('schema.fields.') && c.from === undefined && c.to && c.to.required === true) {
       breaking.push({ ...c, reason: 'required flag changed', path: c.path + '.required' });
-    }
-    // Ensure field removal is detected as breaking
-    if (c.path.startsWith('schema.fields.') && c.to === undefined && c.from !== undefined) {
-      const parts = c.path.split('.');
-      if (parts.length === 3 && !c.path.includes('.type') && !c.path.includes('.required') && !c.path.includes('.pii')) {
-        breaking.push({ ...c, reason: 'column dropped' });
-      }
     }
   }
 
@@ -398,7 +391,7 @@ function generateMigration(fromManifest, toManifest) {
     if (p.startsWith('schema.fields.') && change.to === undefined && change.from !== undefined) {
       const parts = p.split('.');
       // Check if this is a field removal (schema.fields.fieldName) not a property change
-      if (parts.length === 3) {
+      if (parts.length === 3 && !p.includes('.type') && !p.includes('.required') && !p.includes('.pii') && !p.includes('.description')) {
         const fieldName = parts[2];
         steps.push(`DROP COLUMN ${fieldName}`);
       }
@@ -431,10 +424,14 @@ function generateMigration(fromManifest, toManifest) {
   // Always include breaking change notes from diff breaking changes
   const notes = d.breaking.map(b => `BREAKING: ${b.reason} @ ${b.path}`);
   
-  // Add additional breaking change notes for type changes
+  // Add additional breaking change notes for type changes (ensure they're included)
   for (const change of d.changes) {
     if (change.path.startsWith('schema.fields.') && change.path.endsWith('.type')) {
-      notes.push(`BREAKING: column type changed @ ${change.path}`);
+      // Only add if not already in notes
+      const note = `BREAKING: column type changed @ ${change.path}`;
+      if (!notes.includes(note)) {
+        notes.push(note);
+      }
     }
   }
   

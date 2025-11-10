@@ -1,0 +1,443 @@
+# Mission: B4.5 GitHub Action Package (proto/validate-action)
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.5_github-action-package"
+version: "1.0.0"
+
+objective: |
+  Create and publish proto/validate-action@v1 to GitHub Actions Marketplace.
+  Implement manifest validation action with PR commenting, breaking change detection, and PII leak warnings.
+  Enable developers to integrate protocol validation into their CI/CD pipelines with simple workflow configuration.
+
+context: |
+  GitHub Actions integration allows developers to validate manifests automatically in pull requests.
+  
+  Action capabilities:
+  - Discover manifests via glob patterns
+  - Validate using protocol validators
+  - Detect breaking changes between branches
+  - Check for PII leakage without governance
+  - Comment on PRs with validation results
+  - Fail builds based on configurable rules
+  - Support GitHub Annotations for inline errors
+  
+  Based on R4.3 research findings for action type, input/output schema, and implementation patterns.
+
+successCriteria:
+  - "TypeScript action (or Docker/Composite per R4.3) implemented"
+  - "All inputs/outputs from R4.3 spec implemented"
+  - "Manifest discovery with glob patterns working"
+  - "Breaking change detection functional"
+  - "PR commenting working correctly"
+  - "GitHub Annotations for inline errors"
+  - "Published to GitHub Marketplace"
+  - "Comprehensive testing (unit + integration + E2E)"
+  - "Documentation and usage examples complete"
+  - "Used successfully in CPMS repo"
+
+deliverables:
+  - "proto-validate-action repository"
+  - "action.yml metadata file"
+  - "Source code (TypeScript or other per R4.3)"
+  - "Test suite (unit, integration, E2E)"
+  - "README with usage examples"
+  - "Published action on GitHub Marketplace"
+  - "Integration in CPMS .github/workflows/"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "[Action type choice from R4.3 - TypeScript/Docker/Composite]"
+      sourceMission: "R4.3_github-action-requirements"
+    - finding: "[Input/output schema from R4.3]"
+      sourceMission: "R4.3_github-action-requirements"
+    - finding: "[PR commenting strategy from R4.3]"
+      sourceMission: "R4.3_github-action-requirements"
+    - finding: "[Security best practices from R4.3]"
+      sourceMission: "R4.3_github-action-requirements"
+      
+  implementationScope:
+    coreDeliverable: "Production-ready GitHub Action published to Marketplace"
+    outOfScope:
+      - "Support for GitLab CI or other CI systems"
+      - "Advanced caching strategies (v2 enhancement)"
+      - "Incremental validation (only changed files)"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Action development is sequential, single agent optimal"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "action_init"
+        - "implementation_complete"
+        - "tests_passing"
+        - "marketplace_publish"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Action logic and GitHub API integration"
+    - validator: "Gemini"
+      focus: "Security and error handling"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "No hardcoded secrets or tokens"
+      - "Input validation prevents injection attacks"
+      - "Error messages are helpful and actionable"
+      - "Permissions are minimal and documented"
+      - "Action works on both push and pull_request triggers"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "github_api_rate_limit"
+        - "npm_install_failure"
+      behavior: "Retry with backoff"
+    tier_4_human_escalation:
+      enforcement: "If marketplace publishing fails, escalate (may require manual approval)"
+
+  qualityGates:
+    preCommit:
+      - "All tests passing"
+      - "action.yml valid"
+      - "No critical security issues"
+      - "README complete with examples"
+      
+    postImplementation:
+      - "Action works in CPMS repo CI"
+      - "Published on GitHub Marketplace"
+      - "Can be used by other repos"
+      - "PR comments formatted correctly"
+
+  handoffContext:
+    completed:
+      - "GitHub Action published"
+      - "Integrated into CPMS CI/CD"
+      - "Documentation complete"
+    interfaces:
+      - "Action: proto/validate-action@v1"
+      - "Inputs: manifest-glob, protocols, fail-on-breaking, etc."
+      - "Outputs: validated-count, failed-count, validation-report"
+    assumptions:
+      - "R4.3 research provides clear specification"
+      - "proto CLI works in GitHub Actions environment"
+      - "GitHub token has sufficient permissions for PR comments"
+    nextMission: "B4.6_example-repository"
+    blockers:
+      - "Blocked by R4.3_github-action-requirements (must complete first)"
+      - "Blocked by B4.3_npm-publishing-setup (needs @proto/cli published)"
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: Project Setup (30 minutes)
+
+### 1.1 Create Repository
+```bash
+# On GitHub
+# Create new repo: proto-validate-action
+# Description: GitHub Action for Cross-Protocol Manifest validation
+
+git clone https://github.com/[org]/proto-validate-action.git
+cd proto-validate-action
+```
+
+### 1.2 Initialize Action Structure
+Based on R4.3 action type choice:
+
+**If TypeScript Action:**
+```bash
+npm init -y
+npm install --save-dev @types/node typescript
+npm install @actions/core @actions/github @actions/exec glob
+```
+
+**If Docker Action:**
+```bash
+# Create Dockerfile
+# Install Node.js and dependencies
+```
+
+### 1.3 Create action.yml
+```yaml
+name: 'Proto Manifest Validation'
+description: 'Validate Cross-Protocol Manifests in CI/CD'
+author: 'Cross-Protocol Manifest System'
+
+branding:
+  icon: 'check-circle'
+  color: 'blue'
+
+inputs:
+  manifest-glob:
+    description: 'Glob pattern for manifest files'
+    required: true
+    default: '**/*.proto.json'
+  
+  protocols:
+    description: 'Comma-separated protocol types'
+    required: false
+    default: 'all'
+  
+  fail-on-breaking:
+    description: 'Fail if breaking changes detected'
+    required: false
+    default: 'true'
+  
+  fail-on-pii-leak:
+    description: 'Fail if PII without governance'
+    required: false
+    default: 'true'
+  
+  comment-on-pr:
+    description: 'Add comment to PR with results'
+    required: false
+    default: 'true'
+  
+  compare-branch:
+    description: 'Base branch for breaking change detection'
+    required: false
+    default: 'main'
+
+outputs:
+  validated-count:
+    description: 'Number of manifests validated'
+  
+  failed-count:
+    description: 'Number of manifests that failed'
+  
+  breaking-changes-count:
+    description: 'Number of breaking changes detected'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+```
+
+## Phase 2: Implementation (90 minutes)
+
+### 2.1 Main Action Logic
+`src/main.ts`:
+```typescript
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { glob } from 'glob';
+import { validateManifests } from './validator';
+import { detectBreakingChanges } from './diff';
+import { commentOnPR } from './comment';
+
+async function run() {
+  try {
+    // Parse inputs
+    const manifestGlob = core.getInput('manifest-glob', { required: true });
+    const failOnBreaking = core.getInput('fail-on-breaking') === 'true';
+    const commentOnPr = core.getInput('comment-on-pr') === 'true';
+    
+    // Discover manifests
+    const manifests = await glob(manifestGlob);
+    core.info(`Found ${manifests.length} manifest files`);
+    
+    // Validate manifests
+    const results = await validateManifests(manifests);
+    
+    // Detect breaking changes (if PR)
+    let breakingChanges = [];
+    if (github.context.eventName === 'pull_request') {
+      breakingChanges = await detectBreakingChanges(manifests);
+    }
+    
+    // Set outputs
+    core.setOutput('validated-count', results.total);
+    core.setOutput('failed-count', results.failed);
+    core.setOutput('breaking-changes-count', breakingChanges.length);
+    
+    // Comment on PR
+    if (commentOnPr && github.context.eventName === 'pull_request') {
+      await commentOnPR(results, breakingChanges);
+    }
+    
+    // Fail if needed
+    if (results.failed > 0 || (failOnBreaking && breakingChanges.length > 0)) {
+      core.setFailed(`Validation failed: ${results.failed} errors, ${breakingChanges.length} breaking changes`);
+    }
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+}
+
+run();
+```
+
+### 2.2 Validation Logic
+`src/validator.ts`:
+- Load manifests
+- Determine protocol type
+- Run appropriate validator
+- Collect results
+- Generate GitHub Annotations
+
+### 2.3 Breaking Change Detection
+`src/diff.ts`:
+- Checkout base branch
+- Load base manifests
+- Compare with PR manifests
+- Extract breaking changes
+- Format for reporting
+
+### 2.4 PR Commenting
+`src/comment.ts`:
+- Format results as markdown
+- Use GitHub API to post comment
+- Update existing comment (deduplicate)
+- Handle permissions errors gracefully
+
+## Phase 3: Testing (60 minutes)
+
+### 3.1 Unit Tests
+```typescript
+// __tests__/validator.test.ts
+describe('validateManifests', () => {
+  test('validates data protocol manifest', async () => {
+    const results = await validateManifests(['test/fixtures/data.json']);
+    expect(results.failed).toBe(0);
+  });
+  
+  test('detects validation errors', async () => {
+    const results = await validateManifests(['test/fixtures/invalid.json']);
+    expect(results.failed).toBe(1);
+  });
+});
+```
+
+### 3.2 Integration Tests
+Mock GitHub context and test full workflow
+
+### 3.3 E2E Tests
+Create test repository with manifests and run action
+
+## Phase 4: Documentation (30 minutes)
+
+### 4.1 README
+```markdown
+# Proto Manifest Validation Action
+
+GitHub Action for validating Cross-Protocol Manifests in CI/CD pipelines.
+
+## Usage
+
+\`\`\`yaml
+name: Validate Manifests
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: proto/validate-action@v1
+        with:
+          manifest-glob: '**/*.proto.json'
+          fail-on-breaking: true
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+\`\`\`
+
+## Inputs
+
+[Document all inputs with examples]
+
+## Outputs
+
+[Document all outputs]
+
+## Examples
+
+[Multiple workflow examples]
+
+## License
+
+MIT
+```
+
+### 4.2 SECURITY.md
+Document security policy and reporting process
+
+### 4.3 CONTRIBUTING.md
+Guide for contributors
+
+## Phase 5: Publishing (45 minutes)
+
+### 5.1 Build Action
+```bash
+npm run build  # Compile TypeScript
+npm run package  # Bundle with ncc
+```
+
+### 5.2 Tag Release
+```bash
+git tag -a v1.0.0 -m "Release v1.0.0"
+git push origin v1.0.0
+
+# Create v1 tag (major version alias)
+git tag -fa v1 -m "Update v1 to v1.0.0"
+git push origin v1 --force
+```
+
+### 5.3 Publish to Marketplace
+- Create GitHub Release
+- Check "Publish to Marketplace"
+- Wait for approval (first time)
+
+### 5.4 Integrate into CPMS
+`.github/workflows/validate-manifests.yml`:
+```yaml
+name: Validate Manifests
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: proto/validate-action@v1
+        with:
+          manifest-glob: 'manifests/**/*.json'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Checklist
+
+- [ ] Project initialized
+- [ ] action.yml created
+- [ ] Main logic implemented
+- [ ] Validation logic working
+- [ ] Breaking change detection working
+- [ ] PR commenting working
+- [ ] GitHub Annotations implemented
+- [ ] Unit tests passing
+- [ ] Integration tests passing
+- [ ] E2E test successful
+- [ ] README complete
+- [ ] Security policy documented
+- [ ] Action built and bundled
+- [ ] Released and tagged
+- [ ] Published to Marketplace
+- [ ] Integrated into CPMS repo
+- [ ] Verified working in live PR
+

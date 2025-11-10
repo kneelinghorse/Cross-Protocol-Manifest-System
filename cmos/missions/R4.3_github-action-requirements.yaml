@@ -1,0 +1,423 @@
+# Mission: R4.3 GitHub Actions Marketplace Requirements Research
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "R4.3_github-action-requirements"
+version: "1.0.0"
+
+objective: |
+  Research GitHub Actions Marketplace publishing requirements, best practices for action development, and technical patterns for manifest validation actions.
+  Provide actionable specification for proto/validate-action@v1 implementation with marketplace-ready packaging.
+
+context: |
+  Sprint 4 includes creating a GitHub Action for manifest validation that developers can use in their CI/CD pipelines.
+  The action should:
+  - Validate manifests using protocol validators
+  - Detect breaking changes in PRs
+  - Comment on PRs with validation results
+  - Support glob patterns for manifest discovery
+  - Integrate with existing proto CLI
+  
+  This research will evaluate GitHub Actions development patterns, marketplace requirements, and best practices for TypeScript actions.
+
+successCriteria:
+  - "GitHub Actions Marketplace requirements documented"
+  - "Action development patterns researched (TypeScript vs Docker vs Composite)"
+  - "PR commenting strategy specified"
+  - "Breaking change detection approach defined"
+  - "Input/output schema designed"
+  - "Testing strategy documented"
+  - "Branding and marketplace metadata specified"
+  - "All research questions answered with evidence"
+
+deliverables:
+  - "Research report: cmos/research/R4.3-github-action-specification.md"
+  - "Action input/output schema (YAML)"
+  - "PR commenting template design"
+  - "Marketplace metadata specification"
+  - "Testing and validation checklist"
+  - "Security considerations document"
+
+domainFields:
+  type: "Build.TechnicalResearch.v1"
+  
+  researchQuestions:
+    - "What are GitHub Actions Marketplace publishing requirements in 2025?"
+    - "TypeScript Action vs Docker Action vs Composite Action - which is best for our use case?"
+    - "How to structure actions for maximum reusability?"
+    - "What are best practices for PR commenting from actions?"
+    - "How to handle authentication and permissions for PR comments?"
+    - "What inputs should the validation action accept?"
+    - "How to implement breaking change detection in CI context?"
+    - "What output formats work best for CI integration (JSON, annotations, etc.)?"
+    - "How to handle large validation reports (pagination, truncation)?"
+    - "What testing approaches exist for GitHub Actions?"
+    - "How to version actions and manage breaking changes?"
+    - "What are security best practices for actions (secrets, permissions)?"
+    - "How to optimize action runtime (caching, parallelization)?"
+
+  keyFindings: []  # To be populated during research
+
+  contradictionsAndUncertainties: ""  # To be populated during research
+
+  buildImplications:
+    actionType: ""  # TypeScript/Docker/Composite - to be determined
+    inputSchema: ""  # To be determined
+    outputFormat: ""  # To be determined
+    commentingStrategy: ""  # To be determined
+    constraintsToRespect:
+      - "Must work with existing proto CLI"
+      - "Must respect repository permissions"
+      - "Must handle both public and private repos"
+      - "Action runtime <5 minutes for typical repos"
+      - "Clear error messages for misconfigurations"
+
+  evidenceCollection:
+    - type: "Official Documentation"
+      reference: "GitHub Actions official docs (creating actions)"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Official Documentation"
+      reference: "GitHub Actions Marketplace guidelines"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Official Documentation"
+      reference: "@actions/core and @actions/github APIs"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Real-World Examples"
+      reference: "Popular validation actions (ESLint, Prettier, etc.)"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Real-World Examples"
+      reference: "Actions with PR commenting (Danger, Code Climate, etc.)"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Best Practices"
+      reference: "GitHub Actions security best practices"
+      key_insight: ""  # To be populated
+      confidence: ""
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Research mission uses single agent for consistency"
+
+  runtimeTopology:
+    stateDirectories:
+      - "cmos/research"
+      - "cmos/telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "research_start"
+        - "research_complete"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Technical specification and security analysis"
+    - validator: "Gemini"
+      focus: "Best practices and marketplace compliance"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "documentation_access_failure"
+        - "example_analysis_timeout"
+      behavior: "Auto retry with alternative examples"
+    tier_4_human_escalation:
+      enforcement: "If marketplace requirements change significantly, escalate for decision"
+
+  qualityGates:
+    preCompletion:
+      - "All research questions answered"
+      - "Input/output schema fully specified"
+      - "Security analysis includes permission model"
+      - "At least 5 comparable actions analyzed"
+      - "Testing strategy is executable"
+
+  handoffContext:
+    completed: []  # To be populated on completion
+    interfaces: []
+    assumptions:
+      - "Action will be published to GitHub Marketplace"
+      - "Primary use case: PR validation"
+      - "Supports both push and pull_request triggers"
+      - "Works with GitHub-hosted and self-hosted runners"
+    nextMission: "B4.5_github-action-package"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Research Scope
+
+## Areas to Investigate
+
+### 1. Action Type Comparison
+
+**TypeScript Action**
+- Pros: Fast startup, npm ecosystem, easy debugging
+- Cons: Requires compilation, Node.js version dependencies
+- Best for: API-heavy logic, existing npm packages
+
+**Docker Action**
+- Pros: Full environment control, language-agnostic
+- Cons: Slower startup (image pull), larger size
+- Best for: Complex dependencies, non-Node languages
+
+**Composite Action**
+- Pros: Reuse existing actions, declarative
+- Cons: Limited logic, less flexible
+- Best for: Orchestrating other actions
+
+### 2. Proposed Action Interface
+
+```yaml
+name: Validate Manifests
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: proto/validate-action@v1
+        with:
+          # Required
+          manifest-glob: '**/*.proto.json'
+          
+          # Optional
+          fail-on-breaking: 'true'
+          fail-on-pii-leak: 'true'
+          fail-on-warnings: 'false'
+          comment-on-pr: 'true'
+          
+          # Advanced
+          protocols: 'data,event,api,agent'
+          compare-branch: 'main'
+          output-format: 'json'
+          
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+### 3. PR Commenting Strategy
+
+**Comment Format**
+```markdown
+## 🔍 Proto Manifest Validation
+
+**Status**: ❌ Validation Failed
+
+### Manifests Checked: 12
+- ✅ 10 passed
+- ❌ 2 failed
+
+### Errors
+- `data/users.proto.json`: PII field missing governance policy
+- `event/payment.proto.json`: Breaking change detected (removed required field)
+
+### Breaking Changes
+- `event/payment.proto.json`: Removed required field `transaction_id` (line 45)
+
+<details>
+<summary>View Details</summary>
+
+[Full validation report with diff]
+
+</details>
+
+---
+*Powered by [Proto Manifest System](https://proto-manifests.dev)*
+```
+
+**Update Strategy**
+- Create new comment on each push OR
+- Update existing comment (deduplicate) OR
+- Create comment only on failure
+
+### 4. Breaking Change Detection
+
+**Approach**:
+1. Checkout base branch (e.g., `main`)
+2. Load all manifests from base
+3. Checkout PR branch
+4. Load all manifests from PR
+5. Run `diff()` on matching manifests
+6. Analyze `breaking[]` array
+7. Report as errors if `fail-on-breaking: true`
+
+**Edge Cases**:
+- New manifests (not breaking)
+- Deleted manifests (potentially breaking)
+- Renamed manifests (how to detect?)
+- Manifest moved to different path
+
+### 5. Input/Output Schema
+
+**Inputs**:
+```yaml
+manifest-glob:
+  description: 'Glob pattern for manifest files'
+  required: true
+  default: '**/*.proto.json'
+
+protocols:
+  description: 'Comma-separated protocol types to validate'
+  required: false
+  default: 'all'
+
+fail-on-breaking:
+  description: 'Fail if breaking changes detected'
+  required: false
+  default: 'true'
+
+fail-on-pii-leak:
+  description: 'Fail if PII without governance policy'
+  required: false
+  default: 'true'
+
+fail-on-warnings:
+  description: 'Fail on validation warnings'
+  required: false
+  default: 'false'
+
+comment-on-pr:
+  description: 'Add comment to PR with results'
+  required: false
+  default: 'true'
+
+compare-branch:
+  description: 'Base branch for breaking change detection'
+  required: false
+  default: 'main'
+
+output-format:
+  description: 'Output format (json|text|github-annotations)'
+  required: false
+  default: 'github-annotations'
+```
+
+**Outputs**:
+```yaml
+validated-count:
+  description: 'Number of manifests validated'
+
+passed-count:
+  description: 'Number of manifests that passed'
+
+failed-count:
+  description: 'Number of manifests that failed'
+
+breaking-changes-count:
+  description: 'Number of breaking changes detected'
+
+validation-report:
+  description: 'JSON validation report'
+```
+
+### 6. GitHub Annotations
+
+Use GitHub's native annotation system:
+```typescript
+core.error('PII field missing governance policy', {
+  file: 'data/users.proto.json',
+  startLine: 45,
+  endLine: 47,
+  title: 'PII Governance Violation'
+});
+
+core.warning('Field documentation missing', {
+  file: 'event/payment.proto.json',
+  startLine: 12,
+  title: 'Documentation Quality'
+});
+```
+
+### 7. Marketplace Requirements
+
+- `action.yml` metadata file
+- Branding (icon, color)
+- README with usage examples
+- LICENSE file
+- Versioning strategy (v1, v1.0.0, v1.0.1)
+- Release notes
+- Security policy
+- Support/issues process
+
+### 8. Testing Strategy
+
+**Unit Tests**:
+- Input validation
+- Manifest discovery (glob patterns)
+- Validation logic
+- Breaking change detection
+
+**Integration Tests**:
+- Mock GitHub context
+- Test on sample repos
+- PR commenting flow
+- Permission scenarios
+
+**E2E Tests**:
+- Real GitHub Action runs
+- Multiple repo scenarios
+- Edge cases (no manifests, all passing, etc.)
+
+### 9. Security Considerations
+
+- **Permissions**: Minimize required permissions
+- **GITHUB_TOKEN**: Use provided token, don't require PAT
+- **Input Validation**: Sanitize all inputs
+- **Code Injection**: Prevent shell injection in manifest paths
+- **Secrets**: Never log sensitive data
+- **Rate Limiting**: Handle GitHub API rate limits
+
+### 10. Performance Optimization
+
+- **Caching**: Cache npm dependencies, proto CLI
+- **Parallelization**: Validate manifests concurrently
+- **Early Exit**: Fail fast if requested
+- **Incremental**: Only check changed files (optional)
+
+## Expected Outputs
+
+1. **Action Specification** (markdown)
+   - Complete technical spec
+   - Input/output schema
+   - Error handling strategy
+   - Performance targets
+
+2. **Implementation Blueprint** (step-by-step)
+   - Project structure
+   - Dependencies list
+   - Core logic flow
+   - Testing approach
+
+3. **Marketplace Metadata** (YAML + markdown)
+   - `action.yml` complete
+   - README template
+   - Branding decisions
+   - Release strategy
+
+4. **PR Comment Templates** (markdown templates)
+   - Success template
+   - Failure template
+   - Breaking changes template
+   - PII warning template
+
+5. **Security Analysis** (document)
+   - Permission model
+   - Input validation rules
+   - Secret handling guidelines
+   - Rate limit handling
+
+6. **Testing Checklist** for B4.5
+   - Unit test scenarios
+   - Integration test repos
+   - E2E test workflow
+   - Edge case coverage
+

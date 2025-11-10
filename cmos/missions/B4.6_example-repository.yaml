@@ -1,0 +1,527 @@
+# Mission: B4.6 Example Repository
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.6_example-repository"
+version: "1.0.0"
+
+objective: |
+  Create comprehensive example repository demonstrating Cross-Protocol Manifest System usage in a full-stack application.
+  Provide real-world patterns, integration examples, and best practices for developers to learn from.
+  Include Docker setup, CI/CD integration, and multiple protocol types working together.
+
+context: |
+  Example repository serves as:
+  - Learning resource for new users
+  - Reference implementation of best practices
+  - Integration testing for released packages
+  - Showcase of protocol capabilities
+  
+  Should demonstrate:
+  - Data Protocol for database schemas
+  - Event Protocol for Kafka/message bus
+  - API Protocol for REST/GraphQL endpoints
+  - Agent Protocol for service capabilities
+  - Catalog System for cross-protocol analysis
+  - CLI tooling integration
+  - GitHub Action integration
+  - Docker containerization
+  - Full development workflow
+  
+  Target audience: Full-stack developers evaluating the system
+
+successCriteria:
+  - "Example repository created and functional"
+  - "All 5 core protocols demonstrated with real use cases"
+  - "Docker Compose setup for local development"
+  - "CI/CD pipeline using proto/validate-action"
+  - "README with clear setup instructions"
+  - "Multiple example manifests (10+ files)"
+  - "Integration tests demonstrating cross-protocol features"
+  - "Best practices documented"
+  - "Repository cloneable and runnable in <5 minutes"
+  - "Comprehensive comments explaining patterns"
+
+deliverables:
+  - "proto-examples repository"
+  - "Example application (Node.js/Express or similar)"
+  - "10+ manifest files (data, event, API, agent, semantic)"
+  - "Docker Compose configuration"
+  - "CI/CD workflows"
+  - "README with quickstart guide"
+  - "Documentation of patterns and best practices"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Full-stack integration patterns from foundational docs"
+      sourceMission: "foundational-docs/Cross-Protocol Manifest System-k2.md"
+    - finding: "Published packages available on npm"
+      sourceMission: "B4.3_npm-publishing-setup"
+    - finding: "GitHub Action available for CI/CD"
+      sourceMission: "B4.5_github-action-package"
+      
+  implementationScope:
+    coreDeliverable: "Working example repository with comprehensive integration examples"
+    outOfScope:
+      - "Production-ready application (this is for learning)"
+      - "Advanced deployment strategies (keep it simple)"
+      - "Multiple language examples (JavaScript only for v1)"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Example creation is straightforward, single agent optimal"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "repo_init"
+        - "app_implementation"
+        - "manifests_created"
+        - "integration_verified"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Code quality and educational value"
+    - validator: "Gemini"
+      focus: "Best practices and completeness"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "Examples are realistic and useful"
+      - "Comments explain why, not just what"
+      - "Setup instructions are clear and work"
+      - "All dependencies specified correctly"
+      - "No hardcoded secrets or credentials"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "docker_build_failure"
+        - "npm_install_timeout"
+      behavior: "Retry setup steps"
+    tier_4_human_escalation:
+      enforcement: "If example unclear, get feedback before marking complete"
+
+  qualityGates:
+    preCommit:
+      - "All examples run successfully"
+      - "Docker Compose up works cleanly"
+      - "CI pipeline passes"
+      - "README instructions verified"
+      
+    postImplementation:
+      - "Fresh clone and setup works in <5 minutes"
+      - "All manifests validate successfully"
+      - "Integration tests pass"
+      - "No broken links or missing files"
+
+  handoffContext:
+    completed:
+      - "Example repository published"
+      - "All protocols demonstrated"
+      - "Integration patterns documented"
+    interfaces:
+      - "Repository: proto-examples (GitHub)"
+      - "Quick start: README.md"
+      - "Manifests: /manifests/"
+    assumptions:
+      - "Users have Docker installed"
+      - "Users have Node.js 20+ installed"
+      - "Users have basic CLI familiarity"
+    nextMission: "B4.7_community-setup"
+    blockers:
+      - "Blocked by B4.3_npm-publishing-setup (needs published packages)"
+      - "Blocked by B4.5_github-action-package (for CI example)"
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: Repository Setup (30 minutes)
+
+### 1.1 Create Repository
+```bash
+# On GitHub
+# Create: proto-examples
+# Description: Example applications using Cross-Protocol Manifest System
+
+git clone https://github.com/[org]/proto-examples.git
+cd proto-examples
+```
+
+### 1.2 Initialize Project
+```bash
+npm init -y
+npm install @proto/data @proto/event @proto/api @proto/agent @proto/cli
+npm install --save-dev @types/node typescript
+```
+
+### 1.3 Project Structure
+```
+proto-examples/
+├── src/
+│   ├── api/              # Example API service
+│   ├── events/           # Event producers/consumers
+│   ├── data/             # Database integration
+│   └── agents/           # Agent examples
+├── manifests/
+│   ├── data/             # Data Protocol manifests
+│   ├── events/           # Event Protocol manifests
+│   ├── api/              # API Protocol manifests
+│   └── agents/           # Agent Protocol manifests
+├── docker/
+│   ├── docker-compose.yml
+│   └── Dockerfile
+├── .github/workflows/
+│   └── validate.yml
+├── tests/
+│   └── integration.test.js
+├── README.md
+└── package.json
+```
+
+## Phase 2: Example Application (90 minutes)
+
+### 2.1 Example Use Case
+E-commerce order processing system:
+- User service (Data Protocol)
+- Order events (Event Protocol)  
+- Checkout API (API Protocol)
+- Fraud detection agent (Agent Protocol)
+- Semantic analysis (Semantic Protocol)
+
+### 2.2 Data Protocol Example
+`manifests/data/users.json`:
+```json
+{
+  "dataset": {
+    "name": "users",
+    "owner": "user-service",
+    "lifecycle": { "status": "active" }
+  },
+  "schema": {
+    "primary_key": "user_id",
+    "fields": {
+      "user_id": { "type": "uuid", "required": true },
+      "email": { "type": "string", "pii": true, "required": true },
+      "name": { "type": "string", "pii": true },
+      "created_at": { "type": "timestamp", "required": true }
+    }
+  },
+  "governance": {
+    "policy": {
+      "classification": "pii",
+      "retention": "7 years"
+    }
+  }
+}
+```
+
+### 2.3 Event Protocol Example
+`manifests/events/order-created.json`:
+```json
+{
+  "event": {
+    "name": "order.created",
+    "version": "1.0.0",
+    "description": "Emitted when new order is created"
+  },
+  "schema": {
+    "fields": {
+      "order_id": { "type": "string", "required": true },
+      "user_id": { "type": "string", "required": true },
+      "total": { "type": "number", "required": true },
+      "items": { "type": "array", "required": true }
+    }
+  },
+  "transport": {
+    "platform": "kafka",
+    "topic": "orders.created",
+    "partitionKey": "user_id"
+  }
+}
+```
+
+### 2.4 API Protocol Example
+`manifests/api/checkout-api.json`:
+```json
+{
+  "api": {
+    "name": "checkout-api",
+    "version": "1.0.0",
+    "baseUrl": "https://api.example.com/v1"
+  },
+  "endpoints": [
+    {
+      "path": "/checkout",
+      "method": "POST",
+      "operationId": "createOrder",
+      "request": {
+        "contentType": "application/json",
+        "schema": "urn:proto:data:order@v1"
+      },
+      "responses": {
+        "201": {
+          "description": "Order created",
+          "schema": { "type": "object" }
+        }
+      }
+    }
+  ]
+}
+```
+
+### 2.5 Agent Protocol Example
+`manifests/agents/fraud-detection.json`:
+```json
+{
+  "agent": {
+    "name": "fraud-detection-agent",
+    "version": "1.0.0",
+    "description": "Analyzes orders for fraud patterns"
+  },
+  "capabilities": {
+    "tools": [
+      {
+        "name": "analyzeOrder",
+        "description": "Analyze order for fraud indicators",
+        "inputSchema": "urn:proto:data:order@v1"
+      }
+    ]
+  },
+  "relationships": {
+    "consumes": ["urn:proto:event:order.created@v1"],
+    "produces": ["urn:proto:event:fraud.detected@v1"]
+  }
+}
+```
+
+### 2.6 Application Code
+Simple Express app demonstrating protocol usage:
+```javascript
+// src/api/server.js
+import express from 'express';
+import { createAPIProtocol } from '@proto/api';
+import manifest from '../../manifests/api/checkout-api.json' assert { type: 'json' };
+
+const api = createAPIProtocol(manifest);
+const app = express();
+
+app.post('/checkout', (req, res) => {
+  // Validate request against manifest
+  const validation = api.validate();
+  if (!validation.ok) {
+    return res.status(400).json(validation.results);
+  }
+  
+  // Process order...
+  res.status(201).json({ orderId: '...' });
+});
+
+app.listen(3000);
+```
+
+## Phase 3: Docker Setup (30 minutes)
+
+### 3.1 Dockerfile
+```dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+
+EXPOSE 3000
+
+CMD ["node", "src/api/server.js"]
+```
+
+### 3.2 Docker Compose
+```yaml
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./manifests:/app/manifests
+  
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - "2181:2181"
+```
+
+## Phase 4: CI/CD Integration (20 minutes)
+
+### 4.1 GitHub Actions Workflow
+`.github/workflows/validate.yml`:
+```yaml
+name: Validate Manifests
+
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: proto/validate-action@v1
+        with:
+          manifest-glob: 'manifests/**/*.json'
+          fail-on-breaking: true
+          comment-on-pr: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm ci
+      - run: npm test
+```
+
+## Phase 5: Documentation (45 minutes)
+
+### 5.1 Comprehensive README
+```markdown
+# Cross-Protocol Manifest System Examples
+
+Real-world examples demonstrating protocol integration.
+
+## Quick Start
+
+\`\`\`bash
+# Clone repository
+git clone https://github.com/[org]/proto-examples.git
+cd proto-examples
+
+# Install dependencies
+npm install
+
+# Start services
+docker-compose up
+
+# Validate manifests
+npm run validate
+
+# Run integration tests
+npm test
+\`\`\`
+
+## Examples
+
+### Data Protocol
+[Explain user database manifest]
+
+### Event Protocol
+[Explain order event manifest]
+
+### API Protocol
+[Explain checkout API manifest]
+
+### Agent Protocol
+[Explain fraud detection agent manifest]
+
+## Integration Patterns
+
+[Document common patterns]
+
+## Best Practices
+
+[Document best practices]
+```
+
+### 5.2 Pattern Documentation
+Create `docs/patterns.md` explaining:
+- URN linking patterns
+- Catalog analysis workflows
+- Migration strategies
+- Testing approaches
+
+## Phase 6: Testing (30 minutes)
+
+### 6.1 Integration Tests
+```javascript
+// tests/integration.test.js
+import { describe, test } from 'node:test';
+import assert from 'node:assert';
+import { createDataProtocol } from '@proto/data';
+import { createEventProtocol } from '@proto/event';
+import { createAPICatalog } from '@proto/api';
+
+describe('Integration Tests', () => {
+  test('manifests validate successfully', async () => {
+    // Load all manifests
+    // Validate each
+    // Assert all pass
+  });
+  
+  test('URN references resolve', async () => {
+    // Test cross-protocol URN resolution
+  });
+  
+  test('catalog analysis works', async () => {
+    // Test catalog functionality
+  });
+});
+```
+
+### 6.2 Manual Testing
+```bash
+# Clean install test
+rm -rf node_modules
+npm install
+
+# Validate manifests
+npm run validate
+
+# Start services
+docker-compose up
+
+# Run tests
+npm test
+```
+
+## Checklist
+
+- [ ] Repository created
+- [ ] Example application implemented
+- [ ] 10+ manifests created (covering all protocols)
+- [ ] Docker setup working
+- [ ] CI/CD pipeline operational
+- [ ] README comprehensive
+- [ ] Integration tests passing
+- [ ] Best practices documented
+- [ ] Fresh clone works in <5 minutes
+- [ ] All protocols demonstrated
+- [ ] Comments explain patterns clearly
+

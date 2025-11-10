@@ -1,0 +1,237 @@
+# Mission: R4.1 npm Monorepo Tooling Research
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "R4.1_npm-monorepo-research"
+version: "1.0.0"
+
+objective: |
+  Research and evaluate npm monorepo tooling landscape (Lerna, npm workspaces, pnpm workspaces, Turborepo, Nx) to determine the optimal tooling for Cross-Protocol Manifest System release.
+  Provide actionable recommendations for package structure, build pipeline, and publishing workflow that aligns with zero-dependency philosophy.
+
+context: |
+  Sprint 4 focuses on Release & Ecosystem preparation. The project currently has a monolithic structure with all protocols in the root directory.
+  To release to npm as modular packages (@proto/core, @proto/data, etc.), we need to:
+  - Restructure into a monorepo
+  - Choose tooling that supports zero-dependency protocols
+  - Ensure clean separation between packages
+  - Enable independent versioning if needed
+  - Support efficient local development and testing
+  
+  This research mission will evaluate current monorepo tooling (2025 landscape) and provide specific recommendations for Mission B4.2 (monorepo structure implementation).
+
+successCriteria:
+  - "All research questions answered with cited evidence"
+  - "Clear recommendation for monorepo tooling with rationale"
+  - "Package structure proposal documented"
+  - "Build and publish workflow designed"
+  - "Trade-offs and constraints documented"
+  - "Zero-dependency compatibility verified"
+  - "Decision matrix comparing 5+ tools"
+  - "Actionable build implications ready for B4.2"
+
+deliverables:
+  - "Research report: cmos/research/R4.1-npm-monorepo-tooling.md"
+  - "Decision matrix with tooling comparison"
+  - "Recommended package structure diagram"
+  - "Build pipeline specification"
+  - "Publishing workflow documentation"
+
+domainFields:
+  type: "Build.TechnicalResearch.v1"
+  
+  researchQuestions:
+    - "What are the current best practices for npm monorepo management in 2025?"
+    - "How do Lerna, npm workspaces, pnpm workspaces, Turborepo, and Nx compare for zero-dependency packages?"
+    - "Which tooling best supports independent package publishing to npm?"
+    - "How to maintain zero dependencies while using monorepo tooling?"
+    - "What package structure enables tree-shaking and minimal bundle sizes?"
+    - "How to handle shared utilities (utils.js) across packages?"
+    - "What are the trade-offs between workspace-based and Lerna-style linking?"
+    - "How to implement version management (independent vs unified)?"
+    - "What CI/CD patterns work best with the chosen tooling?"
+    - "How to ensure local development experience remains smooth?"
+  
+  keyFindings: []  # To be populated during research
+  
+  contradictionsAndUncertainties: ""  # To be populated during research
+  
+  buildImplications:
+    recommendedTooling: ""  # To be determined
+    packageStructure: ""  # To be determined
+    buildPipeline: ""  # To be determined
+    publishingStrategy: ""  # To be determined
+    constraintsToRespect: 
+      - "Zero-dependency pattern must be maintained"
+      - "Each protocol file should be importable standalone"
+      - "Bundle size target: <10KB per protocol (minified)"
+      - "No breaking changes to existing API surface"
+  
+  evidenceCollection:
+    - type: "Official Documentation"
+      reference: "npm workspaces official docs"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Official Documentation"
+      reference: "pnpm workspaces official docs"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Official Documentation"
+      reference: "Turborepo official docs"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Community Best Practices"
+      reference: "2025 monorepo tooling comparisons"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Real-World Examples"
+      reference: "Large open-source projects using zero-dep patterns"
+      key_insight: ""  # To be populated
+      confidence: ""
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Research mission uses single agent for consistency"
+
+  runtimeTopology:
+    stateDirectories:
+      - "cmos/research"
+      - "cmos/telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "research_start"
+        - "research_complete"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Technical accuracy and completeness of tooling evaluation"
+    - validator: "Gemini"
+      focus: "Best practices validation and real-world applicability"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "documentation_access_failure"
+        - "research_timeout"
+      behavior: "Auto retry research queries"
+    tier_4_human_escalation:
+      enforcement: "If tooling landscape unclear, escalate for human decision"
+
+  qualityGates:
+    preCompletion:
+      - "All research questions answered"
+      - "At least 3 real-world examples cited"
+      - "Decision matrix includes ≥5 tools"
+      - "Build implications are actionable (not vague)"
+
+  handoffContext:
+    completed: []  # To be populated on completion
+    interfaces: []
+    assumptions:
+      - "npm registry will be used for publishing"
+      - "Public packages with MIT license"
+      - "GitHub Actions for CI/CD"
+    nextMission: "B4.2_monorepo-structure"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Research Scope
+
+## Areas to Investigate
+
+### 1. Tooling Comparison Matrix
+Compare on these dimensions:
+- Zero-dependency compatibility
+- Build performance (cold/warm cache)
+- Package linking strategy (symlinks vs node_modules)
+- Publishing workflow (independent vs unified)
+- TypeScript support (future-proofing)
+- CI/CD integration complexity
+- Learning curve for new contributors
+- Active maintenance status
+- Bundle size impact
+- Tree-shaking effectiveness
+
+### 2. Package Structure Options
+
+Option A: Flat Monorepo
+```
+packages/
+  ├── core/
+  ├── data/
+  ├── event/
+  ...
+```
+
+Option B: Scoped Monorepo
+```
+packages/
+  ├── @proto/
+  │   ├── core/
+  │   ├── data/
+  ...
+```
+
+Option C: Domain-Grouped
+```
+packages/
+  ├── protocols/
+  │   ├── data/
+  │   ├── event/
+  ├── tools/
+  │   ├── cli/
+```
+
+### 3. Shared Code Strategy
+- Copy utils.js into each package (current approach)
+- Extract to @proto/core and create internal dependency
+- Use dual-package strategy (ESM + CJS)
+
+### 4. Versioning Strategy
+- Independent versioning (each package has own semver)
+- Unified versioning (all packages bump together)
+- Hybrid (core stable, protocols iterate)
+
+### 5. Build Pipeline
+- Build steps needed per package
+- Test execution strategy (parallel vs sequential)
+- Linting and formatting
+- Bundle generation
+- Size tracking
+
+## Expected Outputs
+
+1. **Recommendation Document** (markdown)
+   - Executive summary with recommended tool
+   - Rationale for choice
+   - Migration path from current structure
+   - Risk assessment
+
+2. **Decision Matrix** (table)
+   - Rows: Tools evaluated
+   - Columns: Evaluation criteria
+   - Scores and notes
+
+3. **Package Structure Spec** (diagram + description)
+   - Directory layout
+   - Package dependencies
+   - Shared code strategy
+   - Entry points
+
+4. **Build Workflow** (pseudo-code or YAML)
+   - Local development commands
+   - CI/CD pipeline steps
+   - Publishing workflow
+
+5. **Implementation Checklist** for B4.2
+   - Step-by-step migration tasks
+   - Testing checkpoints
+   - Rollback strategy
+

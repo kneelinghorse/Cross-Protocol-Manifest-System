@@ -1,0 +1,455 @@
+# Mission: B4.2 npm Monorepo Structure Implementation
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.2_monorepo-structure"
+version: "1.0.0"
+
+objective: |
+  Refactor project from monolithic structure to npm monorepo with independent packages (@proto/*).
+  Implement recommended tooling from R4.1 research findings and create clean package separation while maintaining zero-dependency philosophy.
+  Enable modular installation and independent versioning for protocol packages.
+
+context: |
+  Current structure has all protocols in root directory (monolithic).
+  Sprint 4 goal is npm release of modular packages that developers can install independently.
+  
+  Target structure:
+  ```
+  packages/
+    ├── core/          # @proto/core (utils.js foundation)
+    ├── data/          # @proto/data
+    ├── event/         # @proto/event
+    ├── api/           # @proto/api
+    ├── agent/         # @proto/agent
+    ├── semantic/      # @proto/semantic
+    ├── catalog/       # @proto/catalog
+    └── cli/           # @proto/cli (proto.js)
+  ```
+  
+  This mission depends on R4.1 research findings for tooling choice and implementation approach.
+  Must maintain zero-dependency pattern and all existing functionality.
+
+successCriteria:
+  - "Monorepo structure implemented per R4.1 recommendations"
+  - "All packages have valid package.json with correct metadata"
+  - "Zero-dependency pattern maintained for all protocol packages"
+  - "All existing tests passing in new structure"
+  - "Local development workflow documented and working"
+  - "Shared code strategy implemented (utils.js distribution)"
+  - "Import paths updated throughout codebase"
+  - "No breaking changes to API surface"
+  - "Build pipeline working for all packages"
+  - "README and documentation updated"
+
+deliverables:
+  - "packages/ directory with 8 packages"
+  - "Root package.json with workspace configuration"
+  - "Individual package.json for each package"
+  - "Updated test files with new import paths"
+  - "Build scripts for package generation"
+  - "Developer guide for monorepo workflow"
+  - "Migration validation report"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "[Tooling choice from R4.1]"
+      sourceMission: "R4.1_npm-monorepo-research"
+    - finding: "[Package structure recommendation from R4.1]"
+      sourceMission: "R4.1_npm-monorepo-research"
+    - finding: "[Shared code strategy from R4.1]"
+      sourceMission: "R4.1_npm-monorepo-research"
+    - finding: "[Build pipeline design from R4.1]"
+      sourceMission: "R4.1_npm-monorepo-research"
+      
+  implementationScope:
+    coreDeliverable: "Working npm monorepo with 8 independent packages ready for publishing"
+    outOfScope:
+      - "npm registry publishing (handled in B4.3)"
+      - "Bundle size optimization (handled separately if needed)"
+      - "TypeScript migration (future consideration)"
+      - "Breaking changes to existing APIs"
+
+  orchestrationPatterns:
+    selectedPattern: "delegation"
+    mutuallyExclusive: true
+    configuration:
+      delegation:
+        enabled: true
+        workerManifest: "workers/manifest.yaml"
+        contextIsolation: true
+        maxDelegatedWorkers: 2
+        coordinationNotes: |
+          Primary worker: implementation.backend for refactoring
+          Secondary worker: research.code-analysis for validation
+
+  runtimeTopology:
+    stateDirectories:
+      - "runtime/boomerang"
+      - "telemetry/events"
+      - "workers"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "worker_dispatch"
+        - "refactor_start"
+        - "package_created"
+        - "test_validation"
+        - "refactor_complete"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Refactoring correctness and package structure"
+    - validator: "Gemini"
+      focus: "Zero-dependency validation and build pipeline"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "No external dependencies added to protocol packages"
+      - "All tests still passing after refactor"
+      - "Import paths updated correctly"
+      - "Package.json files are valid and complete"
+      - "No circular dependencies between packages"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "test_failures_after_refactor"
+        - "build_pipeline_errors"
+      behavior: "Rollback and retry with different approach"
+    tier_2_pattern_thresholds:
+      delegation: "2 failed worker executions → halt delegation"
+    tier_3_fallback_to_linear:
+      behavior: "Degrade to single implementation.backend worker"
+      telemetry:
+        emit:
+          - status: "fallback"
+          - fallbackTriggered: true
+    tier_4_human_escalation:
+      enforcement: "If import resolution fails, escalate for manual review"
+
+  qualityGates:
+    preCommit:
+      - "All packages build successfully"
+      - "All tests passing (npm test from root)"
+      - "No external dependencies in protocol packages"
+      - "Each package has valid package.json with MIT license"
+      
+    postImplementation:
+      - "Clean install works (rm -rf node_modules && npm install)"
+      - "Each package can be built independently"
+      - "Test isolation verified (tests don't leak state)"
+
+  handoffContext:
+    completed:
+      - "Monorepo structure implemented"
+      - "All packages created with valid metadata"
+      - "Tests migrated and passing"
+      - "Build pipeline operational"
+    interfaces:
+      - "Package: @proto/core exports foundation utilities"
+      - "Package: @proto/data exports createDataProtocol, createDataCatalog"
+      - "Package: @proto/event exports createEventProtocol, createEventCatalog"
+      - "Package: @proto/api exports createAPIProtocol, createAPICatalog"
+      - "Package: @proto/agent exports createAgentProtocol, createAgentCatalog"
+      - "Package: @proto/semantic exports SemanticProtocolV32"
+      - "Package: @proto/catalog exports unified catalog system"
+      - "Package: @proto/cli exports proto CLI tool"
+    assumptions:
+      - "R4.1 research provides clear tooling recommendation"
+      - "Node.js 20+ supports chosen workspace solution"
+      - "No breaking changes needed to existing code"
+    nextMission: "B4.3_npm-publishing-setup"
+    blockers:
+      - "Blocked by R4.1_npm-monorepo-research (must complete first)"
+      - "Blocked by B4.1_test-stabilization (all tests must pass)"
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: Setup (45 minutes)
+
+### 1.1 Create Package Structure
+```bash
+mkdir -p packages/{core,data,event,api,agent,semantic,catalog,cli}
+```
+
+### 1.2 Initialize Root Workspace
+Based on R4.1 findings, set up chosen tooling:
+- npm workspaces OR
+- pnpm workspaces OR  
+- Lerna OR
+- Other recommended tool
+
+Create `package.json` in root with workspace configuration.
+
+### 1.3 Create Package.json for Each Package
+Template for each package:
+```json
+{
+  "name": "@proto/[name]",
+  "version": "0.4.0",
+  "description": "[Protocol description]",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js"
+  },
+  "scripts": {
+    "test": "node --test *.test.js"
+  },
+  "keywords": ["manifest", "protocol", "validation"],
+  "author": "Cross-Protocol Manifest System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System",
+    "directory": "packages/[name]"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "files": [
+    "index.js",
+    "*.js",
+    "!*.test.js"
+  ]
+}
+```
+
+## Phase 2: Code Migration (90 minutes)
+
+### 2.1 Migrate @proto/core
+```bash
+# Copy foundation utilities
+cp utils.js packages/core/
+cp utils.test.js packages/core/
+```
+
+Create `packages/core/index.js`:
+```javascript
+// Re-export all utilities from utils.js
+export * from './utils.js';
+```
+
+### 2.2 Migrate @proto/data
+```bash
+cp data_protocol_v_1_1_1.js packages/data/data-protocol.js
+cp data-protocol.test.js packages/data/
+```
+
+Create `packages/data/index.js`:
+```javascript
+export { createDataProtocol, createDataCatalog } from './data-protocol.js';
+```
+
+Update imports to use `@proto/core`:
+```javascript
+import { hash, dget, /* ... */ } from '@proto/core';
+```
+
+### 2.3 Migrate @proto/event
+Similar pattern to data package
+
+### 2.4 Migrate @proto/api
+Similar pattern to data package
+
+### 2.5 Migrate @proto/agent
+Similar pattern to data package
+
+### 2.6 Migrate @proto/semantic
+Similar pattern to data package
+
+### 2.7 Migrate @proto/catalog
+Extract catalog system to dedicated package
+
+### 2.8 Migrate @proto/cli
+```bash
+cp proto.js packages/cli/
+cp proto.test.js packages/cli/
+```
+
+Update shebang and make executable:
+```javascript
+#!/usr/bin/env node
+```
+
+Create `packages/cli/package.json` with `bin` field:
+```json
+{
+  "bin": {
+    "proto": "./proto.js"
+  }
+}
+```
+
+## Phase 3: Shared Code Strategy (30 minutes)
+
+Based on R4.1 recommendation, implement ONE of:
+
+**Option A: Internal Dependency**
+- Protocols depend on `@proto/core`
+- Add to package.json: `"dependencies": { "@proto/core": "workspace:*" }`
+- Violates zero-dependency for end users (acceptable if core is minimal)
+
+**Option B: Copy utils.js**
+- Copy utils.js into each protocol package
+- Maintains zero-dependency strictly
+- Adds maintenance overhead
+
+**Option C: Build-time Inlining**
+- Use build step to inline utils.js into each protocol
+- Best of both worlds but adds complexity
+
+Implement recommended option from R4.1.
+
+## Phase 4: Testing (45 minutes)
+
+### 4.1 Run Tests from Root
+```bash
+npm test
+```
+All tests should pass
+
+### 4.2 Run Tests Per Package
+```bash
+cd packages/core && npm test
+cd packages/data && npm test
+cd packages/event && npm test
+# ... etc
+```
+
+### 4.3 Test Package Installation
+```bash
+# Clean slate
+rm -rf node_modules packages/*/node_modules
+npm install
+
+# Verify all packages linked correctly
+ls -la node_modules/@proto/
+```
+
+### 4.4 Test CLI Installation
+```bash
+cd packages/cli
+npm link
+proto validate --help  # Should work globally
+```
+
+## Phase 5: Documentation (30 minutes)
+
+### 5.1 Update Root README
+- Explain monorepo structure
+- Link to package READMEs
+- Update installation instructions
+
+### 5.2 Create Package READMEs
+Each package needs:
+- Installation instructions
+- Quick start example
+- API documentation link
+- License
+
+### 5.3 Create Developer Guide
+`docs/monorepo-development.md`:
+- How to add new packages
+- How to run tests
+- How to build packages
+- How to publish (reference to B4.3)
+
+### 5.4 Update CI Configuration
+If `.github/workflows/` exists, update to:
+- Install workspace dependencies
+- Run tests from root
+- Build all packages
+
+## Phase 6: Validation (30 minutes)
+
+### 6.1 Zero-Dependency Check
+For each protocol package:
+```bash
+cd packages/data
+cat package.json | jq .dependencies
+# Should be empty or only include @proto/core (if Option A)
+```
+
+### 6.2 Import Resolution Check
+Create test script that imports from each package:
+```javascript
+import { createDataProtocol } from '@proto/data';
+import { createEventProtocol } from '@proto/event';
+// ... test all imports work
+```
+
+### 6.3 Build Check
+```bash
+# From root
+npm run build  # or equivalent based on tooling
+```
+
+### 6.4 Clean Install Check
+```bash
+rm -rf node_modules packages/*/node_modules
+npm install
+npm test
+# Should complete successfully
+```
+
+## Rollback Plan
+
+If refactoring fails:
+1. Restore from git (branch before refactor)
+2. Document blocking issues
+3. Re-evaluate approach with R4.1 findings
+4. Escalate if fundamental blocker
+
+## File Structure After Migration
+
+```
+CPMS/
+├── packages/
+│   ├── core/
+│   │   ├── index.js
+│   │   ├── utils.js
+│   │   ├── utils.test.js
+│   │   └── package.json
+│   ├── data/
+│   │   ├── index.js
+│   │   ├── data-protocol.js
+│   │   ├── data-protocol.test.js
+│   │   └── package.json
+│   ├── event/
+│   ├── api/
+│   ├── agent/
+│   ├── semantic/
+│   ├── catalog/
+│   └── cli/
+├── cmos/                # CMOS stays in place
+├── docs/                # Documentation stays in place
+├── manifests/           # Example manifests stay in place
+├── package.json         # Root workspace configuration
+├── README.md            # Updated for monorepo
+└── .github/             # CI configuration (updated)
+```
+
+## Checklist
+
+- [ ] Package directories created
+- [ ] Root workspace configured
+- [ ] All package.json files created
+- [ ] Code migrated to packages
+- [ ] Import paths updated
+- [ ] Shared code strategy implemented
+- [ ] All tests passing from root
+- [ ] Each package tests pass independently
+- [ ] Zero-dependency verified
+- [ ] Documentation updated
+- [ ] CI configuration updated
+- [ ] Clean install tested
+- [ ] Developer guide created
+

@@ -1,0 +1,306 @@
+# Mission: B4.1 Test Stabilization
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.1_test-stabilization"
+version: "1.0.0"
+
+objective: |
+  Fix all failing test suites to achieve 100% test pass rate before npm package release.
+  Address test failures in API Protocol, Data Protocol, Semantic Protocol, URN Resolver, and Proto CLI.
+  Ensure all 99 tests pass with zero failures and meet quality standards for open-source release.
+
+context: |
+  Current test status: 94/99 tests passing (94.9%)
+  
+  Test failures by suite:
+  - API Protocol (api-protocol.test.js): Exit code 1 - needs investigation
+  - Data Protocol (data-protocol.test.js): Exit code 1 - needs investigation
+  - Semantic Protocol (semantic-protocol.test.js): 4 failures (URN validation edge cases)
+  - URN Resolver (urn-resolver.test.js): 3 failures (version parsing, HTTP server, latest version)
+  - Proto CLI (proto.test.js): 1 failure (validate command exit code mismatch)
+  
+  This mission is BLOCKING for B4.2 (monorepo structure) and B4.3 (npm publishing).
+  All protocols are functionally working (359+ tests passing in Sprint 3), so failures are likely edge cases.
+
+successCriteria:
+  - "All 99 tests passing (100% pass rate)"
+  - "npm test exits with code 0"
+  - "All protocol test suites pass independently"
+  - "No regressions in previously passing tests"
+  - "Test failure root causes documented"
+  - "Edge cases properly handled"
+  - "Performance benchmarks still meet targets"
+  - "Coverage maintained at ≥95%"
+
+deliverables:
+  - "Fixed test suites (5 files updated)"
+  - "Test failure analysis document"
+  - "Regression test additions (if needed)"
+  - "Updated test documentation"
+  - "CI validation passing"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Current test status: 94.9% passing (94/99 tests)"
+      sourceMission: "Technical review session"
+    - finding: "API and Data Protocol failures are exit code 1 (unknown root cause)"
+      sourceMission: "npm test output analysis"
+    - finding: "Semantic Protocol has 4 URN validation edge case failures"
+      sourceMission: "semantic-protocol.test.js output"
+    - finding: "URN Resolver has 3 failures: version validation, HTTP server, latest version logic"
+      sourceMission: "urn-resolver.test.js output"
+    - finding: "Proto CLI validate command expects exit code 0 but gets 2"
+      sourceMission: "proto.test.js output"
+      
+  implementationScope:
+    coreDeliverable: "100% test pass rate with all edge cases handled"
+    outOfScope:
+      - "Adding new test cases beyond fixing failures"
+      - "Refactoring test infrastructure"
+      - "Performance optimization (unless causing test failures)"
+      - "Test coverage improvements (maintain current ≥95%)"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Focused debugging session, single agent most efficient"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "test_suite_start"
+        - "test_failure_analysis"
+        - "test_fix_applied"
+        - "test_suite_complete"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Code correctness and edge case handling"
+    - validator: "Gemini"
+      focus: "Test quality and no regressions introduced"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "All test fixes are correct (not workarounds)"
+      - "Edge cases properly handled with validation"
+      - "No test skipping or commenting out failures"
+      - "Fix root causes, not symptoms"
+      - "No breaking changes to API surface"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "test_flakiness"
+        - "timing_issues"
+      behavior: "Retry tests once to rule out flakiness"
+    tier_4_human_escalation:
+      enforcement: "If root cause unclear after investigation, escalate for pair debugging"
+
+  qualityGates:
+    preCommit:
+      - "npm test exits 0"
+      - "All 99 tests passing"
+      - "No new test failures introduced"
+      - "Test execution time <60s total"
+      
+    postImplementation:
+      - "Run tests 3 times to verify stability"
+      - "No flaky tests observed"
+      - "Coverage report shows ≥95%"
+
+  handoffContext:
+    completed:
+      - "All test suites passing"
+      - "Test failures root-caused and fixed"
+      - "Edge cases documented"
+    interfaces:
+      - "All existing protocol APIs unchanged"
+      - "Test infrastructure unchanged"
+    assumptions:
+      - "Failures are edge cases, not fundamental issues"
+      - "Protocols are functionally correct (359+ tests passed in Sprint 3)"
+      - "No major refactoring needed"
+    nextMission: "B4.2_monorepo-structure"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: Diagnosis (30 minutes)
+
+### 1.1 API Protocol Test Failures
+```bash
+node --test api-protocol.test.js
+```
+- Identify which specific tests are failing
+- Check for async timing issues
+- Verify test data validity
+- Check for environment-specific issues
+
+### 1.2 Data Protocol Test Failures
+```bash
+node --test data-protocol.test.js
+```
+- Identify failing test cases
+- Check schema validation logic
+- Verify PII detection logic
+- Check migration generation
+
+### 1.3 Semantic Protocol Failures (4 known failures)
+```bash
+node --test semantic-protocol.test.js
+```
+Known issues:
+- URN validation strictness (expect null, get object)
+- Query path parsing edge cases
+Investigate and fix validation logic
+
+### 1.4 URN Resolver Failures (3 known failures)
+```bash
+node --test urn-resolver.test.js
+```
+Known issues:
+- "should reject version with v prefix" - expects null, gets object
+- "should load latest version when specified" - assertion failed
+- "should start HTTP server" - cannot read properties of undefined (reading 'port')
+
+### 1.5 Proto CLI Failure (1 known failure)
+```bash
+node --test proto.test.js
+```
+Known issue:
+- Validate command expects exit code 0, gets exit code 2
+- Check if validation is actually failing or exit code logic is wrong
+
+## Phase 2: Fix Implementation (60 minutes)
+
+### 2.1 Fix URN Resolver Version Validation
+File: `urn-resolver.js`
+- Fix `parseSemanticVersion()` to reject "v" prefix properly
+- Fix `loadLatestVersion()` logic
+- Fix HTTP server port binding (likely undefined config)
+
+### 2.2 Fix Semantic Protocol URN Validation
+File: `Semantic Protocol — v3.2.0.js`
+- Review URN validation logic in `_validateProtocolBindings()`
+- May need to be more permissive or strict based on intent
+- Check query path parsing in `match()` method
+
+### 2.3 Fix API Protocol Tests
+File: `api-protocol.test.js` or `api_protocol_v_1_1_1.js`
+- Fix whatever is causing exit code 1
+- Likely assertion failures or unhandled exceptions
+
+### 2.4 Fix Data Protocol Tests
+File: `data-protocol.test.js` or `data_protocol_v_1_1_1.js`
+- Fix whatever is causing exit code 1
+- Likely edge cases in validation or diff logic
+
+### 2.5 Fix Proto CLI Exit Code
+File: `proto.js` or `proto.test.js`
+- Verify validate command exit codes
+- Should exit 0 on success, non-zero on failure
+- Fix test expectation or implementation
+
+## Phase 3: Validation (30 minutes)
+
+### 3.1 Run Full Test Suite
+```bash
+npm test
+```
+Verify:
+- Exit code 0
+- All 99 tests passing
+- No new failures
+- Reasonable execution time
+
+### 3.2 Run Tests Multiple Times
+```bash
+npm test && npm test && npm test
+```
+Verify no flaky tests
+
+### 3.3 Check Coverage
+```bash
+# If coverage tooling available
+npm run test:coverage
+```
+Verify coverage ≥95%
+
+### 3.4 Run Individual Suites
+```bash
+node --test utils.test.js
+node --test data-protocol.test.js
+node --test event-protocol.test.js
+node --test api-protocol.test.js
+node --test agent-protocol.test.js
+node --test semantic-protocol.test.js
+node --test urn-resolver.test.js
+node --test catalog-system.test.js
+node --test integration-tests.js
+node --test proto.test.js
+```
+All should pass independently
+
+## Phase 4: Documentation (15 minutes)
+
+### 4.1 Document Fixes
+Create summary:
+- What was broken
+- Root cause
+- How it was fixed
+- Edge cases addressed
+
+### 4.2 Update Test Documentation
+If test behavior changed, update comments
+
+### 4.3 Commit Changes
+```bash
+git add [affected files]
+git commit -m "fix: resolve all test failures (B4.1)
+
+- Fixed URN resolver version validation
+- Fixed Semantic Protocol URN strictness
+- Fixed API Protocol [specific issue]
+- Fixed Data Protocol [specific issue]
+- Fixed Proto CLI exit code handling
+
+All 99 tests now passing (100% pass rate)
+```
+
+## Test Failure Checklist
+
+For each failing test:
+- [ ] Identify exact assertion that fails
+- [ ] Understand expected vs actual behavior
+- [ ] Determine if test is wrong or code is wrong
+- [ ] Fix root cause (not symptom)
+- [ ] Verify fix doesn't break other tests
+- [ ] Document edge case if applicable
+- [ ] Verify test passes consistently (run 3x)
+
+## Edge Cases to Consider
+
+- Null and undefined inputs
+- Empty arrays and objects
+- Circular references
+- Very large inputs
+- Special characters in strings
+- Invalid URN formats
+- Version edge cases (0.0.0, v-prefix, etc.)
+- HTTP server port conflicts
+- File system issues (permissions, missing files)
+- Async timing issues
+

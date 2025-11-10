@@ -1,0 +1,427 @@
+# Mission: B4.3 npm Publishing Setup
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.3_npm-publishing-setup"
+version: "1.0.0"
+
+objective: |
+  Configure npm publishing workflow for @proto/* packages with automated CI/CD pipeline using GitHub Actions.
+  Setup package versioning, release automation, and publish to npm registry.
+  Ensure packages are discoverable and properly tagged on npm.
+
+context: |
+  Monorepo structure is ready from B4.2. Now need to:
+  - Configure npm registry authentication
+  - Create release workflow with GitHub Actions
+  - Setup version management (independent or unified)
+  - Configure package publishing automation
+  - Add release notes generation
+  - Setup npm organization (@proto scope)
+  
+  Packages to publish:
+  - @proto/core
+  - @proto/data
+  - @proto/event
+  - @proto/api
+  - @proto/agent
+  - @proto/semantic
+  - @proto/catalog
+  - @proto/cli
+  
+  This enables developers to `npm install @proto/data` for immediate use.
+
+successCriteria:
+  - "npm organization @proto created and configured"
+  - "GitHub Actions workflow for publishing operational"
+  - "All 8 packages successfully published to npm"
+  - "Package metadata complete (README, license, keywords)"
+  - "Versioning strategy implemented (from R4.1)"
+  - "Release notes automation working"
+  - "Package discovery working on npmjs.com"
+  - "Installation verification from npm registry passed"
+  - "Security audit clean (npm audit)"
+
+deliverables:
+  - ".github/workflows/publish-packages.yml"
+  - "Release automation scripts"
+  - "Version management tooling configuration"
+  - "npm organization setup documentation"
+  - "Publishing runbook"
+  - "First release (v0.4.0) published to npm"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "[Version strategy from R4.1 - independent vs unified]"
+      sourceMission: "R4.1_npm-monorepo-research"
+    - finding: "[Publishing workflow pattern from R4.1]"
+      sourceMission: "R4.1_npm-monorepo-research"
+    - finding: "[Release automation approach from R4.1]"
+      sourceMission: "R4.1_npm-monorepo-research"
+      
+  implementationScope:
+    coreDeliverable: "Automated npm publishing pipeline with all packages on npm registry"
+    outOfScope:
+      - "npm package usage analytics (separate concern)"
+      - "Package deprecation strategy (future)"
+      - "Private package management"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Publishing setup is sequential, single agent optimal"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "npm_org_setup"
+        - "workflow_created"
+        - "first_publish_attempt"
+        - "publish_success"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Workflow correctness and automation reliability"
+    - validator: "Gemini"
+      focus: "Security and best practices for npm publishing"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "npm tokens are properly secured (not committed)"
+      - "Workflow includes security checks"
+      - "Version bumping is automated and correct"
+      - "Release notes are generated automatically"
+      - "Packages install correctly from npm"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "npm_registry_timeout"
+        - "workflow_transient_failure"
+      behavior: "Retry publish once"
+    tier_4_human_escalation:
+      enforcement: "If npm organization setup fails, escalate (requires human npm account)"
+
+  qualityGates:
+    preCommit:
+      - "Workflow YAML is valid"
+      - "npm organization exists and accessible"
+      - "Package metadata complete"
+      - "Security audit passes"
+      
+    postImplementation:
+      - "Test install from npm: npm install @proto/core"
+      - "Verify all 8 packages visible on npmjs.com"
+      - "Check package pages have README"
+      - "Verify LICENSE in packages"
+
+  handoffContext:
+    completed:
+      - "Publishing workflow operational"
+      - "All packages published to npm"
+      - "Automated releases configured"
+    interfaces:
+      - "Workflow: .github/workflows/publish-packages.yml"
+      - "Trigger: Git tags matching v*.*.* pattern"
+      - "Output: Published packages on npm registry"
+    assumptions:
+      - "npm account exists with publishing rights"
+      - "GitHub repo has npm token as secret"
+      - "Packages pass all quality checks"
+    nextMission: "B4.4_documentation-site"
+    blockers:
+      - "Blocked by B4.2_monorepo-structure (packages must exist)"
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: npm Organization Setup (30 minutes)
+
+### 1.1 Create npm Organization
+- Register @proto organization on npmjs.com
+- Configure organization settings
+- Add team members (if any)
+- Set up 2FA
+
+### 1.2 Generate npm Token
+- Create automation token for CI/CD
+- Scope: publish access
+- Store securely (not in code)
+
+### 1.3 Configure GitHub Secrets
+```bash
+# In GitHub repo settings → Secrets
+NPM_TOKEN=<automation-token>
+```
+
+## Phase 2: Package Metadata (45 minutes)
+
+### 2.1 Verify Package.json Files
+Each package needs:
+```json
+{
+  "name": "@proto/[name]",
+  "version": "0.4.0",
+  "description": "...",
+  "keywords": ["manifest", "protocol", "validation", "..."],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System",
+    "directory": "packages/[name]"
+  },
+  "bugs": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/issues",
+  "homepage": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System#readme",
+  "license": "MIT",
+  "author": "Cross-Protocol Manifest System",
+  "files": ["index.js", "*.js", "!*.test.js"],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
+```
+
+### 2.2 Create Package READMEs
+Minimum README template:
+```markdown
+# @proto/[name]
+
+[Description]
+
+## Installation
+
+npm install @proto/[name]
+
+## Quick Start
+
+[Code example]
+
+## Documentation
+
+Full documentation: [link to docs site]
+
+## License
+
+MIT
+```
+
+### 2.3 Verify LICENSE Files
+Ensure MIT license in each package or root
+
+## Phase 3: Publishing Workflow (60 minutes)
+
+### 3.1 Create GitHub Actions Workflow
+`.github/workflows/publish-packages.yml`:
+```yaml
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run tests
+        run: npm test
+      
+      - name: Build packages
+        run: npm run build  # if build step exists
+      
+      - name: Audit security
+        run: npm audit --audit-level=moderate
+      
+      - name: Publish packages
+        run: npm run publish:all
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+### 3.2 Create Publish Script
+Add to root `package.json`:
+```json
+{
+  "scripts": {
+    "publish:all": "npm run publish:core && npm run publish:data && ...",
+    "publish:core": "cd packages/core && npm publish --access public",
+    "publish:data": "cd packages/data && npm publish --access public",
+    "...": "..."
+  }
+}
+```
+
+Or use workspace-aware publishing from chosen tool.
+
+### 3.3 Version Management
+Based on R4.1 recommendation:
+
+**Option A: Independent Versioning**
+- Each package has own version
+- Use Lerna or Changesets for management
+
+**Option B: Unified Versioning**
+- All packages share version
+- Simpler but less flexible
+
+Implement recommended approach.
+
+## Phase 4: First Release (30 minutes)
+
+### 4.1 Prepare Release
+```bash
+# Ensure all tests pass
+npm test
+
+# Ensure no uncommitted changes
+git status
+
+# Create version tag
+git tag -a v0.4.0 -m "Release v0.4.0 - Sprint 4 Initial Release"
+```
+
+### 4.2 Push Tag (Triggers Workflow)
+```bash
+git push origin v0.4.0
+```
+
+### 4.3 Monitor Workflow
+- Watch GitHub Actions workflow
+- Check for errors
+- Verify packages appear on npm
+
+### 4.4 Verify Published Packages
+```bash
+npm view @proto/core
+npm view @proto/data
+# ... check all 8 packages
+```
+
+## Phase 5: Installation Verification (20 minutes)
+
+### 5.1 Test Fresh Install
+```bash
+mkdir /tmp/proto-test
+cd /tmp/proto-test
+npm init -y
+npm install @proto/core
+npm install @proto/data
+npm install @proto/cli
+```
+
+### 5.2 Test Import and Usage
+```javascript
+// test.js
+import { createDataProtocol } from '@proto/data';
+import { hash } from '@proto/core';
+
+const protocol = createDataProtocol({
+  dataset: { name: 'test' },
+  schema: { fields: { id: { type: 'string' } } }
+});
+
+console.log(protocol.manifest());
+```
+
+Run: `node test.js`
+
+### 5.3 Test CLI Installation
+```bash
+npm install -g @proto/cli
+proto validate --help
+```
+
+## Phase 6: Release Notes (15 minutes)
+
+### 6.1 Generate Release Notes
+Create GitHub Release with notes:
+```markdown
+# Release v0.4.0 - Sprint 4 Initial Release
+
+## New Packages Published
+
+- @proto/core - Foundation utilities
+- @proto/data - Data Protocol v1.1.1
+- @proto/event - Event Protocol v1.1.1
+- @proto/api - API Protocol v1.1.1
+- @proto/agent - Agent Protocol v1.1.1
+- @proto/semantic - Semantic Protocol v3.2.0
+- @proto/catalog - Unified catalog system
+- @proto/cli - Command-line tools
+
+## Installation
+
+npm install @proto/data
+
+## Highlights
+
+- Zero external dependencies
+- Immutable protocol instances
+- URN-based cross-protocol linking
+- 100% test coverage
+
+## Documentation
+
+Coming soon: [docs site]
+
+## Contributors
+
+Built with CMOS mission-driven development.
+```
+
+### 6.2 Update Project README
+Update root README with npm badges:
+```markdown
+[![npm version](https://badge.fury.io/js/%40proto%2Fcore.svg)](https://www.npmjs.com/package/@proto/core)
+```
+
+## Rollback Plan
+
+If publish fails:
+```bash
+# Unpublish within 24 hours (if needed)
+npm unpublish @proto/core@0.4.0 --force
+
+# Fix issues
+# Re-tag with patch version
+git tag v0.4.1
+git push origin v0.4.1
+```
+
+## Checklist
+
+- [ ] npm organization @proto created
+- [ ] npm token generated and stored in GitHub secrets
+- [ ] All packages have complete metadata
+- [ ] All packages have READMEs
+- [ ] Publishing workflow created
+- [ ] Version management configured
+- [ ] First tag created (v0.4.0)
+- [ ] Workflow executed successfully
+- [ ] All 8 packages visible on npmjs.com
+- [ ] Fresh install tested
+- [ ] CLI global install tested
+- [ ] Release notes published
+- [ ] Project README updated with npm badges
+

@@ -1,0 +1,321 @@
+# Mission: R4.2 Documentation Site & Live Playground Research
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "R4.2_documentation-site-research"
+version: "1.0.0"
+
+objective: |
+  Research and design documentation site architecture using Docusaurus with integrated live playground for manifest editing and validation.
+  Provide technical specification for in-browser protocol validation, Monaco Editor integration, and deployment strategy.
+
+context: |
+  Sprint 4 requires a public-facing documentation site to support the npm package release.
+  The site must serve multiple purposes:
+  - Getting started guides and tutorials
+  - API reference documentation
+  - Live playground for manifest editing
+  - Example repository and patterns
+  - Integration guides for CI/CD
+  
+  The live playground is a key differentiator - users should be able to:
+  - Edit manifests in-browser (Monaco Editor)
+  - Run validation without installing anything
+  - See diff results in real-time
+  - Generate SDKs and migrations
+  - Export results
+  
+  This research will evaluate modern doc site patterns, in-browser validation techniques, and deployment options.
+
+successCriteria:
+  - "Docusaurus configuration and plugin recommendations documented"
+  - "Live playground technical architecture designed"
+  - "In-browser protocol validation implementation approach specified"
+  - "Monaco Editor integration pattern researched"
+  - "Deployment platform recommended with rationale"
+  - "Content structure and IA (Information Architecture) defined"
+  - "Search integration approach specified"
+  - "Performance targets defined"
+  - "All research questions answered with evidence"
+
+deliverables:
+  - "Research report: cmos/research/R4.2-documentation-site-architecture.md"
+  - "Live playground technical specification"
+  - "Site content structure (IA diagram)"
+  - "Docusaurus configuration template"
+  - "Deployment workflow specification"
+  - "Performance and accessibility requirements"
+
+domainFields:
+  type: "Build.TechnicalResearch.v1"
+  
+  researchQuestions:
+    - "What are Docusaurus best practices for technical documentation in 2025?"
+    - "How to integrate Monaco Editor with React/Docusaurus?"
+    - "What's the best approach for in-browser WebAssembly validation?"
+    - "Should we bundle protocols in browser or load dynamically?"
+    - "How to handle protocol execution sandboxing in browser?"
+    - "What deployment platforms offer best performance for static sites with dynamic features?"
+    - "How to implement search (Algolia DocSearch vs alternatives)?"
+    - "What patterns exist for live code playgrounds in documentation?"
+    - "How to optimize bundle size for browser-based protocol validation?"
+    - "What accessibility standards should we meet (WCAG 2.1 AA)?"
+    - "How to handle versioned documentation (multiple releases)?"
+    - "What analytics and user feedback tools integrate well with Docusaurus?"
+
+  keyFindings: []  # To be populated during research
+
+  contradictionsAndUncertainties: ""  # To be populated during research
+
+  buildImplications:
+    docusaurusConfiguration: ""  # To be determined
+    playgroundArchitecture: ""  # To be determined
+    deploymentPlatform: ""  # To be determined
+    searchStrategy: ""  # To be determined
+    constraintsToRespect:
+      - "Zero-dependency protocols must work in browser"
+      - "Playground must be secure (no arbitrary code execution)"
+      - "Page load time <2s (LCP)"
+      - "Mobile-responsive design"
+      - "WCAG 2.1 AA compliance minimum"
+
+  evidenceCollection:
+    - type: "Official Documentation"
+      reference: "Docusaurus v3 official docs"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Official Documentation"
+      reference: "Monaco Editor integration guides"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Real-World Examples"
+      reference: "TypeScript playground architecture"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Real-World Examples"
+      reference: "Rust playground implementation"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Real-World Examples"
+      reference: "Other doc sites with live editors (Stripe, Twilio, etc.)"
+      key_insight: ""  # To be populated
+      confidence: ""
+    - type: "Technical Article"
+      reference: "In-browser code validation patterns"
+      key_insight: ""  # To be populated
+      confidence: ""
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Research mission uses single agent for consistency"
+
+  runtimeTopology:
+    stateDirectories:
+      - "cmos/research"
+      - "cmos/telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "research_start"
+        - "research_complete"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Technical architecture and UX patterns"
+    - validator: "Gemini"
+      focus: "Performance optimization and accessibility"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "documentation_access_failure"
+        - "example_site_unavailable"
+      behavior: "Auto retry with alternative sources"
+    tier_4_human_escalation:
+      enforcement: "If browser security model blocks features, escalate for design decision"
+
+  qualityGates:
+    preCompletion:
+      - "All research questions answered"
+      - "Live playground architecture includes security analysis"
+      - "Performance targets defined with measurement strategy"
+      - "At least 5 real-world examples analyzed"
+      - "Deployment platform recommendation includes cost analysis"
+
+  handoffContext:
+    completed: []  # To be populated on completion
+    interfaces: []
+    assumptions:
+      - "Site will be public-facing (not auth-gated)"
+      - "Primary audience: JavaScript/TypeScript developers"
+      - "Target modern browsers (Chrome, Firefox, Safari, Edge - last 2 versions)"
+    nextMission: "B4.4_documentation-site"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Research Scope
+
+## Areas to Investigate
+
+### 1. Docusaurus Configuration
+- Plugin ecosystem for live code editors
+- Theme customization best practices
+- MDX component patterns
+- Versioning strategy for multiple releases
+- Build performance optimization
+- SEO optimization
+- Analytics integration
+
+### 2. Live Playground Architecture
+
+**Option A: Full Client-Side**
+```
+User Browser
+  ├── Monaco Editor (syntax highlighting, autocomplete)
+  ├── Bundled Protocols (protocols loaded as ES modules)
+  ├── Web Worker (validation runs off main thread)
+  └── Results Display (diff viewer, error console)
+```
+
+**Option B: Hybrid (Client + Serverless)**
+```
+User Browser (Monaco Editor)
+  ↓
+Serverless Function (validation)
+  ↓
+Results returned to browser
+```
+
+**Option C: WebAssembly**
+```
+Compile protocols to WASM
+Run validation in isolated WASM sandbox
+```
+
+### 3. Monaco Editor Integration
+- React component wrapper
+- Custom language definition for manifests
+- Autocomplete and IntelliSense
+- Error squiggles and inline diagnostics
+- Theme matching with Docusaurus
+- Accessibility features (keyboard nav, screen readers)
+
+### 4. In-Browser Validation
+- Bundle size impact of including protocols
+- Worker thread vs main thread
+- Memory management for large manifests
+- Error handling and user feedback
+- Rate limiting and abuse prevention
+- Example manifests and templates
+
+### 5. Deployment Platforms
+
+Evaluate:
+- **Vercel** - React-optimized, edge functions, free tier
+- **Netlify** - Serverless functions, CDN, free tier
+- **Cloudflare Pages** - Global CDN, Workers integration
+- **GitHub Pages** - Free for public repos, simple
+- **AWS Amplify** - Full AWS integration
+
+Compare on:
+- Build performance
+- Edge/CDN capabilities
+- Serverless function support (if needed)
+- Cost (free tier limits)
+- DX (developer experience)
+- Analytics built-in
+- Custom domain support
+
+### 6. Content Structure (IA)
+
+```
+docs/
+  ├── getting-started/
+  │   ├── installation.md
+  │   ├── quick-start.md
+  │   ├── core-concepts.md
+  │   └── your-first-manifest.md
+  ├── protocols/
+  │   ├── data-protocol.md
+  │   ├── event-protocol.md
+  │   ├── api-protocol.md
+  │   ├── agent-protocol.md
+  │   └── semantic-protocol.md
+  ├── guides/
+  │   ├── validation.md
+  │   ├── migrations.md
+  │   ├── sdk-generation.md
+  │   ├── ci-cd-integration.md
+  │   └── catalog-analysis.md
+  ├── api/
+  │   └── [auto-generated from JSDoc]
+  ├── playground/
+  │   └── [interactive editor]
+  ├── examples/
+  │   ├── real-world-patterns.md
+  │   ├── full-stack-integration.md
+  │   └── migrating-from-openapi.md
+  └── community/
+      ├── contributing.md
+      ├── code-of-conduct.md
+      └── changelog.md
+```
+
+### 7. Search Integration
+- Algolia DocSearch (free for open source)
+- Local search alternatives
+- Search result ranking and relevance
+- Code search within examples
+
+### 8. Performance Targets
+- Lighthouse score ≥90 (Performance)
+- LCP (Largest Contentful Paint) <2.5s
+- FID (First Input Delay) <100ms
+- CLS (Cumulative Layout Shift) <0.1
+- Bundle size for playground <500KB (gzipped)
+
+## Expected Outputs
+
+1. **Architecture Document** (markdown)
+   - System diagram of live playground
+   - Data flow and component interaction
+   - Security model
+   - Performance optimization strategy
+
+2. **Docusaurus Configuration** (code template)
+   - `docusaurus.config.js` template
+   - Plugin list with rationale
+   - Theme customization approach
+   - Build pipeline
+
+3. **Playground Implementation Spec** (technical spec)
+   - Component structure
+   - State management approach
+   - Protocol loading strategy
+   - Example manifest library
+
+4. **Deployment Guide** (step-by-step)
+   - Platform setup
+   - Environment variables
+   - CI/CD integration
+   - Custom domain configuration
+   - Analytics setup
+
+5. **Content Creation Checklist** for B4.4
+   - Page list with priorities
+   - Template for each page type
+   - Screenshot/video requirements
+   - SEO checklist
+
+6. **Accessibility Checklist**
+   - WCAG 2.1 AA requirements
+   - Keyboard navigation spec
+   - Screen reader testing plan
+   - Color contrast validation
+
