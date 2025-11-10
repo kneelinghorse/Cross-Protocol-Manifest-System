@@ -1,0 +1,40 @@
+---
+id: analytics-stack
+title: Analytics Stack Blueprint
+description: End-to-end example connecting data, event, and API protocols.
+---
+
+This example shows how a single product feature flows through multiple protocols.
+
+## Scenario
+
+- **Event Stream** – `user-signups` published from the identity API.
+- **Data Set** – `user_signups_daily` derived in the lakehouse.
+- **API** – `growth-metrics` exposes the aggregated data to dashboards.
+
+## Manifests
+
+```json title="events/user-signups.json"
+{ "protocol": "event", "channel": { "name": "user-signups" }, "schema": { "fields": { "user_id": { "type": "string", "required": true } } } }
+```
+
+```json title="datasets/user_signups_daily.json"
+{ "protocol": "data", "dataset": { "name": "user_signups_daily" }, "lineage": { "sources": [{ "type": "event", "id": "user-signups" }] } }
+```
+
+```json title="apis/growth-metrics.json"
+{ "protocol": "api", "service": { "name": "growth-metrics" }, "lineage": { "sources": [{ "type": "dataset", "id": "user_signups_daily" }] } }
+```
+
+## Validating Relationships
+
+```js
+const event = createEventProtocol(eventManifest);
+const dataset = createDataProtocol(datasetManifest);
+const api = createApiProtocol(apiManifest);
+
+const catalog = createDataCatalog([dataset]);
+const hasPIIEgress = catalog.piiEgressWarnings();
+```
+
+Use the CLI `graph` command to emit a system diagram. Because URNs are consistent, the graph includes cross-protocol edges without extra metadata.

@@ -1,0 +1,74 @@
+---
+id: cli-guide
+title: CLI Usage Guide
+description: Learn how to validate, diff, generate, and query manifests with proto.js.
+---
+
+The CLI is a single file (`proto.js`) that ships with the repo. No npm install is required.
+
+## Commands
+
+### `validate`
+
+```bash
+node proto.js validate manifests/*.json --validators core.shape,governance.pii_policy
+```
+
+- Validates one or more manifests.
+- Pass comma-separated validator names or leave blank to run all.
+- Exit code `1` indicates blocking errors. Use `--strict` to fail on warnings.
+
+### `diff`
+
+```bash
+node proto.js diff --from manifests/v1.json --to manifests/v2.json --generate-migration
+```
+
+Outputs `changes`, `breaking`, and `migration` hints. Great for pull requests or drift detection.
+
+### `generate`
+
+```bash
+node proto.js generate docs --manifest manifests/user_events.json --output ./dist/docs
+node proto.js generate sdk --manifest manifests/payments.json --language javascript
+```
+
+Generates documentation, validation code, schemas, or SDKs that you can publish next to your services.
+
+### `query`
+
+```bash
+node proto.js query --manifests manifests/*.json --expr "schema.fields:=:email"
+```
+
+Filters manifests using the tiny expression language used inside protocol helpers.
+
+### `graph`
+
+```bash
+node proto.js graph --manifests manifests/*.json --format mermaid --output system-graph.md
+```
+
+Produces topology graphs showing data→API→agent relationships.
+
+## Global Flags
+
+| Flag | Purpose |
+| ---- | ------- |
+| `--verbose` | Print debug output + validator traces. |
+| `--format json|pretty` | Format CLI output (default: pretty). |
+| `--output <path>` | Write results to a file (JSON, markdown, or code). |
+
+## CI/CD Integration
+
+Use the CLI inside GitHub Actions, Buildkite, or any CI runner:
+
+```yaml
+- name: Validate manifests
+  run: node proto.js validate manifests/*.json
+
+- name: Prevent breaking changes
+  run: node proto.js diff --from manifests/main --to manifests/pr --generate-migration
+```
+
+Because the CLI has no dependencies, cold-start time is under 500 ms, making it safe to run on every commit.

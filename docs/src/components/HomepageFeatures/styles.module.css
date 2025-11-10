@@ -1,0 +1,14 @@
+.features {
+  padding: 3rem 0;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(15,23,42,0.02), rgba(15,23,42,0));
+}
+
+.feature {
+  background: var(--ifm-card-background-color);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+  height: 100%;
+}

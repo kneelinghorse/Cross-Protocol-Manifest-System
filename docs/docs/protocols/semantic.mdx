@@ -1,0 +1,56 @@
+---
+id: semantic-protocol
+title: Semantic Protocol Reference
+description: Capture intents, similarity graphs, and semantic vectors.
+---
+
+The Semantic Protocol links natural-language intents to concrete protocol artifacts. It powers discovery, impact analysis, and safety reviews.
+
+## Structure
+
+- `intent` – Natural-language description, category, priority.
+- `confidence` – Numeric bands describing prediction certainty.
+- `vectors` – Pre-computed embeddings (512-dim) stored as base64 strings.
+- `bindings` – URNs referencing data sets, APIs, or agents that satisfy the intent.
+- `criticality` – Impact tier, review cadence, escalation policy.
+
+## Example Manifest
+
+```json
+{
+  "protocol": "semantic",
+  "intent": {
+    "id": "intent.detect-pii",
+    "description": "Detect PII leaks across outbound webhooks",
+    "category": "governance"
+  },
+  "confidence": {
+    "score": 0.92,
+    "explanation": "Validated on 5K webhook payloads"
+  },
+  "vectors": {
+    "model": "text-embedding-3-large",
+    "values": "3zvAB..."
+  },
+  "bindings": [
+    { "type": "dataset", "urn": "urn:data:dataset:user_events:v1.1.1" },
+    { "type": "api", "urn": "urn:api:service:webhooks:v2" }
+  ],
+  "criticality": {
+    "tier": "high",
+    "review_window_days": 14
+  }
+}
+```
+
+## Helper APIs
+
+```ts
+import { createSemanticProtocol } from '@proto/semantic';
+
+const intent = createSemanticProtocol(manifest);
+const similar = intent.findSimilar(otherIntent);
+const score = intent.criticality();
+```
+
+Similarity helpers compute cosine distance using the stored vectors and return ranked matches for search experiences.

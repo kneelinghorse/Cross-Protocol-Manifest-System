@@ -1,0 +1,58 @@
+---
+id: agent-protocol
+title: Agent Protocol Reference
+description: Describe AI agents, guardrails, and evaluation plans.
+---
+
+Agent manifests capture LLM-backed workers in a deterministic format so you can audit prompts, safety filters, and telemetry outputs.
+
+## Core Fields
+
+- `agent` – Name, purpose, owner, maturity stage.
+- `inputs` / `outputs` – Structured schemas with types, optionality, and pii flags.
+- `guardrails` – Rate limits, allowed tools, alignment policies.
+- `policies` – Safety, privacy, logging expectations.
+- `evaluation` – Test suites, judges (LLM-as-Judge), acceptance thresholds.
+
+## Usage
+
+```ts
+import { createAgentProtocol } from '@proto/agent';
+
+const triageBot = createAgentProtocol(manifest);
+const run = triageBot.validate();
+const plan = triageBot.generateEvaluationPlan();
+```
+
+The evaluation helpers output mission-ready judge configurations referencing Gemini + Claude scripts from CMOS research.
+
+## Example
+
+```json
+{
+  "protocol": "agent",
+  "agent": {
+    "name": "support-triage",
+    "version": "1.2.0",
+    "owner": "cx-automation"
+  },
+  "inputs": {
+    "ticket": { "type": "object", "required": true },
+    "history": { "type": "array" }
+  },
+  "outputs": {
+    "resolution": { "type": "string" },
+    "handoff_required": { "type": "boolean" }
+  },
+  "guardrails": {
+    "max_tool_invocations": 5,
+    "disallowed_content": ["credentials", "PII"]
+  },
+  "evaluation": {
+    "judges": ["Claude", "Gemini"],
+    "metrics": ["correctness", "tone", "policy_adherence"]
+  }
+}
+```
+
+Agent manifests make it easy to prove compliance for AI workflows without reverse engineering prompt chains.

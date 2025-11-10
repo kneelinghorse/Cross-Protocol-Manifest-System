@@ -1,0 +1,71 @@
+---
+id: installation
+title: Install the Tooling
+description: Install the CLI, protocol packages, and optional monorepo tooling for CPMS.
+---
+
+CPMS ships as a workspace of zero-dependency npm packages. You can consume them directly (recommended for app teams) or clone the repository to build from source.
+
+## Prerequisites
+
+- **Node.js 20+** – Required for deterministic hashing and the built-in test runner.
+- **pnpm 9.12+** – Use `corepack enable` so pnpm versions stay pinned.
+- **Python 3.11+** – Needed only for CMOS orchestration scripts.
+
+## Clone + Install
+
+```bash
+# clone
+git clone https://github.com/kneelinghorse/Cross-Protocol-Manifest-System.git cpms
+cd cpms
+
+# install workspace deps
+eval "$(corepack enable pnpm)"
+pnpm install
+```
+
+`pnpm install` bootstraps all protocol packages plus the docs site. Turborepo handles build orchestration.
+
+## Consume as Packages
+
+Add any subset of the protocols to an application via npm or pnpm:
+
+```bash
+pnpm add @proto/data @proto/api @proto/event --save-dev
+```
+
+Because every package is dependency-free, you can ship them directly into regulated environments without caring about transitive supply-chain risks.
+
+## Optional Tooling
+
+| Tool | Command | Purpose |
+| ---- | ------- | ------- |
+| `npm test` | `pnpm test` | Runs Node's test runner across repo protocols |
+| `npm run benchmark` | `pnpm benchmark` | Enforces hash + diff latency targets |
+| `npm run lint` | `pnpm lint` | Turborepo-powered ESLint |
+| `npm run format` | `pnpm format` | Optional formatting helpers |
+
+## CMOS Orchestration
+
+If you operate missions with CMOS:
+
+```bash
+python3 cmos/scripts/mission_runtime.py status
+python3 cmos/scripts/mission_runtime.py start --mission B4.4 --summary "Docs site" --agent "Codex"
+python3 cmos/scripts/mission_runtime.py complete --mission B4.4 --summary "Docs deployed"
+```
+
+Always validate parity afterwards:
+
+```bash
+python3 cmos/scripts/validate_parity.py
+```
+
+## What Gets Installed
+
+- Workspace packages under `packages/`
+- Shared utilities under `internal/`
+- Documentation site (Docusaurus v3) under `docs/`
+- Mission orchestration assets under `cmos/`
+
+With installation out of the way, jump into [creating your first manifest](./first-manifest).

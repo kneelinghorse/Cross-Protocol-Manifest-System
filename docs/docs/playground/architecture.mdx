@@ -1,0 +1,66 @@
+---
+id: playground-architecture
+title: Live Playground Architecture
+description: Dive into the Monaco + Web Worker playground architecture powering in-browser validation.
+---
+
+The playground is designed to match production behavior without compromising performance.
+
+## High-Level Flow
+
+```mermaid
+flowchart LR
+  Editor[Monaco Editor] -- debounced JSON --> Worker
+  Worker -- manifest + protocol --> WASM Hook
+  WASM Hook -- validation results --> Worker
+  Worker -- severity-mapped markers --> Editor
+  Worker -- structured summary --> UI Panel
+```
+
+- **Editor** – Monaco runs inside React with a custom JSON schema, IntelliSense, and keyboard shortcuts.
+- **Worker** – A dedicated worker keeps the UI responsive, pulls in protocol packages, and normalizes errors.
+- **Protocol Modules** – The same `@proto/*` packages used by the CLI, bundled for the browser.
+- **WASM Hook (Future)** – Validation logic can be swapped with WASM modules for additional sandboxing; the worker uses an async contract to prepare future upgrades.
+
+## Lazy Loading Strategy
+
+To keep Lighthouse scores ≥90:
+
+- `React.lazy()` and `<Suspense>` only load the playground bundle when the user navigates to `/playground`.
+- Monaco, `@monaco-editor/react`, and worker scripts live in a separate chunk.
+- On the home page we render a lightweight CTA that links to the playground instead of inlining the editor.
+
+## Schema & IntelliSense
+
+The editor injects a JSON schema (generated from protocol metadata) via `monaco.languages.json.jsonDefaults.setDiagnosticsOptions`. The schema covers core fields (`dataset`, `schema`, `governance`) and attaches descriptions so hover tooltips read like inline documentation.
+
+## Validation Contract
+
+Workers post structured messages:
+
+```ts
+interface WorkerResult {
+  status: 'ok' | 'error';
+  elapsedMs: number;
+  protocol: string;
+  markers: Array<{
+    message: string;
+    severity: 'error' | 'warn' | 'info';
+    startLineNumber: number;
+    startColumn: number;
+    endLineNumber: number;
+    endColumn: number;
+  }>;
+  issues: Array<{ path: string; msg: string; level: string } & Record<string, unknown>>;
+}
+```
+
+The UI shows both Monaco squiggles and a tabular summary with severity filters and timestamps.
+
+## Extensibility Hooks
+
+- **Custom Validators** – Register additional validators in `@proto/data` and they automatically appear in the playground results.
+- **Protocol Switcher** – The worker chooses the factory (`createDataProtocol`, `createApiProtocol`, etc.) based on a dropdown in the UI.
+- **Export** – Users can download the manifest JSON along with validation results for offline auditing (coming soon).
+
+The live playground is the fastest way to socialize manifests with teammates—no environment setup required.

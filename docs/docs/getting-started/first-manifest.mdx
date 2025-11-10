@@ -1,0 +1,90 @@
+---
+id: first-manifest
+title: Create Your First Manifest
+description: Follow a guided exercise to create, validate, and diff a CPMS manifest.
+---
+
+This quickstart walks through creating a `user_events` data manifest, validating it, and generating an upgrade diff.
+
+## 1. Scaffold the Manifest
+
+Create `manifests/user_events.json`:
+
+```json title="manifests/user_events.json"
+{
+  "protocol": "data",
+  "version": "v1.1.1",
+  "dataset": {
+    "name": "user_events",
+    "type": "fact-table",
+    "lifecycle": { "status": "active" }
+  },
+  "schema": {
+    "primary_key": "event_id",
+    "fields": {
+      "event_id": { "type": "string", "required": true },
+      "user_id": { "type": "string", "required": true },
+      "email": { "type": "string", "pii": true },
+      "event_date": { "type": "date", "required": true }
+    }
+  }
+}
+```
+
+## 2. Validate
+
+```bash
+node proto.js validate manifests/user_events.json
+```
+
+Sample output:
+
+```json
+{
+  "ok": true,
+  "results": [
+    { "name": "core.shape", "ok": true },
+    { "name": "schema.keys", "ok": true }
+  ]
+}
+```
+
+Add a governance policy and rerun validation to see warning-level checks fire when encryption is missing.
+
+## 3. Generate Docs + SDKs
+
+```bash
+node proto.js generate docs --manifest manifests/user_events.json --output dist/docs
+node proto.js generate sdk --manifest manifests/user_events.json --language javascript
+```
+
+All generators derive content from the manifest and require no extra configuration.
+
+## 4. Diff Versions
+
+Modify the manifest:
+
+```diff title="manifests/user_events.json"
+@@
+-    "email": { "type": "string", "pii": true },
++    "email": { "type": "string", "pii": true, "required": true },
+@@
+-  "operations": null
++  "operations": {
++    "refresh": { "schedule": "hourly" }
++  }
+```
+
+Then diff:
+
+```bash
+node proto.js diff --from manifests/user_events.json --to manifests/user_events.json --generate-migration
+```
+
+Output includes breaking changes plus a migration checklist you can paste into change management systems.
+
+## 5. Validate in the Playground
+
+Visit the [live playground](/playground) to paste the manifest and watch Monaco-powered validations in the browser. All logic is reused from `@proto/data` and runs inside a sandboxed worker.
+
+You now have the basics covered—dig into protocol-specific docs for deeper capabilities.

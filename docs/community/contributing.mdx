@@ -1,0 +1,37 @@
+---
+id: contributing
+title: Contributing Guide
+description: How to propose changes, run tests, and follow mission workflows.
+---
+
+## Workflow
+
+1. Open a CMOS mission or pick one marked `Current`/`In Progress` via `./cmos/cli.py mission status`.
+2. Read both `agents.md` files (root + `cmos/agents.md`).
+3. Run pre-flight checks:
+   - `./cmos/cli.py validate health`
+   - `./cmos/cli.py db show current`
+4. Create a branch, implement changes, and keep zero-dependency guarantees intact.
+5. Run `pnpm test` + targeted benchmarks when protocol code changes.
+6. Update docs (this site) when new APIs or workflows ship.
+
+## Coding Standards
+
+- Pure functions, immutable updates, no shared global state.
+- Extensive inline JSDoc for public helpers.
+- OWASP Top 10 compliance: no eval, escape untrusted input, prefer whitelist validation.
+- Mission telemetry: log start/complete via CMOS scripts—never edit YAML mirrors manually.
+
+## Pull Requests
+
+Include:
+
+- Mission ID in the title.
+- Summary of changes + verification steps (tests, benchmarks, docs build).
+- Any telemetry or parity validation outputs in the PR body.
+
+## Communication
+
+- Primary: CMOS missions + MASTER_CONTEXT updates.
+- Secondary: GitHub Discussions for roadmap items.
+- Emergency: `cmos/telemetry/events/*.jsonl` for debugging state drift.

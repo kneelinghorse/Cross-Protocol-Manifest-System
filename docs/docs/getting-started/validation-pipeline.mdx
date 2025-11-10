@@ -1,0 +1,74 @@
+---
+id: validation-pipeline
+title: Validation + Governance Pipeline
+description: Understand how validators, catalogs, and CLI tooling keep manifests compliant.
+---
+
+Validation happens everywhere—CLI, CI/CD, and the browser playground all use the same pure functions. Each protocol exposes `validate()` plus helpers for catalogs.
+
+## Validator Registry
+
+Validators are registered via `registerValidator(name, fn)` and run through `protocol.validate([names])`.
+
+```js
+import { createDataProtocol, registerValidator } from '@proto/data';
+
+registerValidator('quality.freshness', (manifest) => {
+  const ts = manifest.quality?.freshness_ts;
+  if (!ts) {
+    return { ok: false, issues: [{ path: 'quality.freshness_ts', msg: 'Missing freshness timestamp', level: 'warn' }] };
+  }
+  return { ok: true };
+});
+
+const dataset = createDataProtocol(manifest);
+const result = dataset.validate(['core.shape', 'quality.freshness']);
+```
+
+Validators return `{ ok, issues }` where each issue contains `path`, `msg`, and `level (error|warn|info)`.
+
+## Catalog Validations
+
+Use catalogs when validating many manifests together:
+
+```js
+import { createDataCatalog } from '@proto/data';
+
+const catalog = createDataCatalog(manifests.map(createDataProtocol));
+const run = catalog.validateAll(['core.shape']);
+const piiWarnings = catalog.piiEgressWarnings();
+const lineageCycles = catalog.detectCycles();
+```
+
+Catalog helpers focus on cross-manifest guarantees such as:
+
+- Detecting PII data flowing to `external` consumers.
+- Surfacing lineage cycles that break DAG assumptions.
+- Aggregating validator output for dashboards.
+
+## CLI Pipeline
+
+`proto.js` wraps protocol helpers to run offline:
+
+```bash
+# Multi-file validation
+node proto.js validate manifests/*.json --validators core.shape,schema.keys
+
+# Governance screening in CI
+node proto.js validate manifests/*.json --validators governance.pii_policy
+```
+
+2 exit codes are emitted:
+
+- `0` – no blocking errors (warnings allowed unless `--strict` is passed).
+- `1` – blocking errors detected or CLI failed to parse.
+
+## Playground Pipeline
+
+The Docusaurus playground mirrors the CLI pipeline:
+
+1. Monaco enforces a JSON schema for quick feedback.
+2. A dedicated web worker imports the same protocol packages (`@proto/data`, `@proto/api`, ...).
+3. Results stream back to the editor along with semantic scoring and run duration metadata.
+
+Because every environment runs the same pure functions, you can trust that a passing manifest in the playground will also pass CI/CD and production checks.

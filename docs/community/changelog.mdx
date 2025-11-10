@@ -1,0 +1,30 @@
+---
+id: changelog
+title: Project Changelog
+description: Snapshot of sprint-level milestones.
+---
+
+## Sprint 1 – Foundation & Data Protocol
+
+- Delivered `utils.js` plus 100% test coverage.
+- Implemented `data-protocol.js` with normalized manifests, diffing, and migration helpers.
+- Built the zero-install CLI (`proto.js`) with validate/diff/generate/graph commands.
+- Benchmarks met: hashing ≥ 1M ops/sec, parsing < 5 ms, diff < 10 ms.
+
+## Sprint 2 – Event & API Protocols
+
+- Added `@proto/event` with AsyncAPI-friendly manifests and 22.94M events/sec benchmarks.
+- Added `@proto/api` with OpenAPI 3.0 compatibility and SDK generation.
+- Enhanced mission tooling: CLI query + graph commands, URN resolver service.
+
+## Sprint 3 – Validation & Integration
+
+- Released agent + semantic protocol validation suites (64/68 tests passing initially, later bumped to 100%).
+- Hardened governance validators, CLI query expressions, and diff output.
+- Produced integration docs + telemetry improvements via CMOS.
+
+## Sprint 4 – Docs & Playground (Current)
+
+- Docusaurus v3 site with Algolia search + Cloudflare Pages deployment track.
+- Monaco playground with worker-based validation.
+- Publishing runbook captured for npm releases.

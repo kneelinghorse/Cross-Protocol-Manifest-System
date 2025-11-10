@@ -1,0 +1,18 @@
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.header p {
+  color: rgba(15, 23, 42, 0.7);
+  max-width: 640px;
+  margin: 0.5rem auto 0;
+}
+
+.fallback {
+  width: 100%;
+  padding: 2rem;
+  text-align: center;
+  border: 1px dashed rgba(15, 23, 42, 0.2);
+  border-radius: 12px;
+}

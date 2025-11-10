@@ -1,0 +1,57 @@
+---
+id: event-protocol
+title: Event Protocol Reference
+description: Document event-stream manifests that power Kafka, Kinesis, or webhooks.
+---
+
+`@proto/event` mirrors the Data Protocol but focuses on streaming semantics—topics, partitions, retention, and delivery guarantees.
+
+## Manifest Highlights
+
+- `channel` – Name + transport (Kafka topic, Kinesis stream, webhook path).
+- `schema` – JSON schema describing payload fields + type metadata.
+- `ingress` / `egress` – Producers and consumers (services, teams, partner endpoints).
+- `delivery` – Guarantees (`at-most-once`, `at-least-once`, `exactly-once`).
+- `governance` – Retention, encryption status, compliance policy.
+
+## API Surface
+
+```ts
+import { createEventProtocol } from '@proto/event';
+
+const protocol = createEventProtocol(manifest);
+protocol.validate();
+protocol.diff(nextManifest);
+protocol.generateDocs();
+```
+
+Validators cover schema definitions, delivery guarantees, and compatibility with AsyncAPI.
+
+## Sample Manifest
+
+```json title="events/user-signups.json"
+{
+  "protocol": "event",
+  "channel": {
+    "name": "user-signups",
+    "transport": "kafka",
+    "retention_hours": 168
+  },
+  "schema": {
+    "fields": {
+      "event_id": { "type": "string", "required": true },
+      "user_id": { "type": "string", "required": true },
+      "email": { "type": "string", "pii": true },
+      "signup_at": { "type": "timestamp", "required": true }
+    }
+  },
+  "delivery": {
+    "guarantee": "at-least-once",
+    "ordering_key": "user_id"
+  },
+  "ingress": [{ "type": "service", "id": "identity-api" }],
+  "egress": [{ "type": "warehouse", "id": "lakehouse:user_signups" }]
+}
+```
+
+Use `protocol.generateAsyncApi()` (helper) to export canonical AsyncAPI fragments for integration portals.

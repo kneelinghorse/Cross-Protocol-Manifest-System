@@ -1,0 +1,82 @@
+---
+id: api-protocol
+title: API Protocol Reference
+description: Model REST and GraphQL APIs with contract-aware manifests.
+---
+
+`@proto/api` describes HTTP surfaces, authentication, rate limits, and SDK metadata. It can emit OpenAPI JSON plus typed SDK stubs.
+
+## Key Sections
+
+- `service` – Name, owner, runtime, release channel.
+- `endpoints` – Path, method, params, request/response schema, errors.
+- `auth` – Supported schemes (OAuth, API key, service token) + scopes.
+- `limits` – QPS, concurrency, payload size.
+- `sdk` – Languages + package names for generated clients.
+
+## Usage
+
+```ts
+import { createApiProtocol } from '@proto/api';
+
+const payments = createApiProtocol(manifest);
+const { ok, results } = payments.validate();
+const docs = payments.generateDocs();
+const openapi = payments.generateOpenAPI();
+const sdk = payments.generateSdk({ language: 'javascript' });
+```
+
+## Example Endpoint
+
+```json title="apis/payments.json"
+{
+  "protocol": "api",
+  "service": {
+    "name": "payments",
+    "owner": "pay-core",
+    "lifecycle": { "status": "ga" }
+  },
+  "endpoints": [
+    {
+      "path": "/v1/payments",
+      "method": "post",
+      "summary": "Create a payment",
+      "request": {
+        "body": {
+          "type": "object",
+          "fields": {
+            "amount": { "type": "number", "required": true },
+            "currency": { "type": "string", "required": true },
+            "customer_id": { "type": "string", "required": true }
+          }
+        }
+      },
+      "response": {
+        "200": {
+          "description": "Payment accepted",
+          "schema": { "$ref": "#/components/schemas/Payment" }
+        }
+      }
+    }
+  ],
+  "auth": {
+    "default": "oauth",
+    "schemes": {
+      "oauth": {
+        "type": "oauth2",
+        "flows": ["client_credentials"],
+        "scopes": ["payments:create"]
+      }
+    }
+  },
+  "limits": {
+    "rate": { "unit": "minute", "max": 200 }
+  }
+}
+```
+
+## Best Practices
+
+- Keep `endpoints` declarative; business logic stays out of manifests.
+- Use URNs in `lineage` fields to connect APIs to upstream datasets.
+- Generate SDKs in CI and publish to npm, NuGet, or PyPI using the same manifest.

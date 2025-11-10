@@ -1,0 +1,86 @@
+---
+id: ci-cd
+title: CI/CD Integration Guide
+description: Run manifest checks, diff detection, and docs deployment inside CI/CD.
+---
+
+The repo ships with GitHub Actions workflows, but the commands below work in any CI runner.
+
+## Validate Every Push
+
+```yaml title=".github/workflows/validate.yml"
+name: Validate Manifests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - run: pnpm install
+      - run: node proto.js validate manifests/*.json --validators core.shape,schema.keys
+```
+
+## Prevent Breaking Changes
+
+```yaml
+diff:
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
+    - run: node proto.js diff --from manifests/main --to manifests/pr --generate-migration
+```
+
+## Docs Deployment
+
+`cmos/research` recommends Cloudflare Pages for the documentation site. Hook it into CI:
+
+```yaml title=".github/workflows/deploy-docs.yml"
+name: Deploy Docs
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - run: pnpm install
+      - run: pnpm --filter docs build
+      - uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: 'cpms-docs'
+          directory: 'docs/build'
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+```
+
+## Telemetry Hooks
+
+- Run `python3 cmos/scripts/mission_runtime.py status` before + after deployments.
+- Append summary notes via `./cmos/cli.py mission update` to keep MASTER_CONTEXT in sync.
+
+## Tips
+
+- Cache `~/.pnpm-store` in CI to keep install times low.
+- Turn on `pnpm install --frozen-lockfile` to ensure reproducibility.
+- Fail fast when validators emit warnings by passing `--strict`.

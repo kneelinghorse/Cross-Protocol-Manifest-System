@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="cpmsLogoTitle cpmsLogoDesc">
+  <title id="cpmsLogoTitle">Cross-Protocol Manifest System</title>
+  <desc id="cpmsLogoDesc">Interlocking brackets symbolizing interoperable manifests</desc>
+  <defs>
+    <linearGradient id="cpmsGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop stop-color="#2563eb" offset="0%" />
+      <stop stop-color="#0ea5e9" offset="100%" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" fill="#0f172a" />
+  <path d="M20 18h12c3.314 0 6 2.686 6 6v6h-6v-6h-12v16h12v-6h6v6c0 3.314-2.686 6-6 6H20c-3.314 0-6-2.686-6-6V24c0-3.314 2.686-6 6-6Z" fill="url(#cpmsGradient)" />
+  <path d="M44 46H32c-3.314 0-6-2.686-6-6v-6h6v6h12V24H32v6h-6v-6c0-3.314 2.686-6 6-6h12c3.314 0 6 2.686 6 6v16c0 3.314-2.686 6-6 6Z" fill="#38bdf8" />
+</svg>

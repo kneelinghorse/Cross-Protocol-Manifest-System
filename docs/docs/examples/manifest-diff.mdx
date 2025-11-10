@@ -1,0 +1,50 @@
+---
+id: manifest-diffing
+title: Manifest Diffing Patterns
+description: Compare versions safely with CLI + catalog helpers.
+---
+
+Manifest diffs power safe rollouts. Combine CLI output with catalog metrics for maximum clarity.
+
+## CLI Diff
+
+```bash
+node proto.js diff \
+  --from manifests/datasets/user_events-v1.json \
+  --to manifests/datasets/user_events-v2.json \
+  --generate-migration
+```
+
+Sample output:
+
+```json
+{
+  "changes": [
+    { "path": "schema.fields.email.required", "from": false, "to": true }
+  ],
+  "breaking": [
+    { "path": "schema.fields.email.required", "reason": "required flag changed" }
+  ],
+  "migration": {
+    "steps": ["-- BACKFILL email column", "-- enforce NOT NULL"]
+  }
+}
+```
+
+## Catalog Guardrails
+
+```js
+const next = createDataProtocol(nextManifest);
+const prev = createDataProtocol(prevManifest);
+
+const diff = prev.diff(next.manifest());
+const migration = prev.generateMigration(next.manifest());
+```
+
+Feed `diff` into change reviews, and store `migration` output alongside database runbooks.
+
+## Tips
+
+- Always validate both versions before diffing to avoid noisy outputs.
+- Track `schema_hash` and `field_hashes` (auto-generated) to detect tampering.
+- Store diff artifacts in CI for auditors.

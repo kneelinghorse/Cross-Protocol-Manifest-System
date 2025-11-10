@@ -1,0 +1,84 @@
+---
+id: data-protocol
+title: Data Protocol Reference
+description: Reference for the zero-dependency Data Protocol package.
+---
+
+The Data Protocol models warehouse tables, streams, and files with governance metadata and lifecycle automation hooks.
+
+## API Surface
+
+```ts
+import { createDataProtocol, createDataCatalog, registerValidator } from '@proto/data';
+```
+
+| Method | Description |
+| ------ | ----------- |
+| `createDataProtocol(manifest)` | Normalizes a manifest and returns an immutable protocol instance. |
+| `protocol.validate(names?)` | Runs validator registry (defaults to all validators). |
+| `protocol.match(expr)` | Tiny query language for subsets (`schema.fields:=:email`, `lineage.consumers:contains:external`). |
+| `protocol.diff(next)` | Structural + semantic diff; identifies adds/removes/changes. |
+| `protocol.generateMigration(next)` | Produces SQL-style migration hints. |
+| `protocol.generateDocs()` | Emits markdown reference docs. |
+| `protocol.generateSchema()` | Emits JSON schema friendly to Monaco and tooling. |
+| `protocol.set(path, value)` | Returns a new protocol with the update applied (immutably). |
+
+## Manifest Fields
+
+- `dataset` – Identity, type, lifecycle state, owners, tags.
+- `schema` – Field dictionary plus `primary_key`, `keys.unique`, `keys.partition`.
+- `lineage` – `sources` + `consumers` with URN references.
+- `operations` – Refresh cadence, expected-by SLAs, retention windows.
+- `governance` – Policy classification, legal basis, residency.
+- `quality` – Freshness timestamp, row-count estimates, null-rate instrumentation.
+
+## Built-In Validators
+
+| Name | Purpose |
+| ---- | ------- |
+| `core.shape` | Ensures dataset name + schema fields exist and lifecycle status is valid. |
+| `schema.keys` | Validates that declared primary keys exist within fields. |
+| `governance.pii_policy` | Warns when PII fields are missing PII classification or encryption. |
+| `operations.refresh` | Validates refresh schedule enumerations. |
+
+Extend the registry with `registerValidator('team.rule', fn)` to enforce domain-specific checks.
+
+## Catalog Helpers
+
+```ts
+const catalog = createDataCatalog(manifests.map(createDataProtocol));
+const governanceAlerts = catalog.piiEgressWarnings();
+const cycles = catalog.detectCycles();
+```
+
+`detectCycles()` surfaces lineage loops, while `piiEgressWarnings()` highlights when PII flows to external consumers.
+
+## Example Manifest
+
+```json title="datasets/user_events.json"
+{
+  "protocol": "data",
+  "dataset": {
+    "name": "user_events",
+    "type": "fact-table",
+    "lifecycle": { "status": "active" }
+  },
+  "schema": {
+    "primary_key": "event_id",
+    "fields": {
+      "event_id": { "type": "string", "required": true },
+      "user_id": { "type": "string", "required": true },
+      "email": { "type": "string", "pii": true }
+    },
+    "keys": {
+      "partition": { "field": "event_date", "type": "daily" }
+    }
+  },
+  "governance": {
+    "policy": { "classification": "pii", "legal_basis": "gdpr" },
+    "storage_residency": { "region": "eu-west-1", "encrypted_at_rest": true }
+  }
+}
+```
+
+Try this manifest in the [playground](/playground) to see the validator output inline.

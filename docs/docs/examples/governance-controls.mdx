@@ -1,0 +1,50 @@
+---
+id: governance-controls
+title: Governance + PII Controls
+description: Apply built-in validators to enforce privacy policies.
+---
+
+PII detection and retention policies are encoded directly in manifests.
+
+## Example Manifest
+
+```json
+{
+  "protocol": "data",
+  "dataset": { "name": "payments" },
+  "schema": {
+    "fields": {
+      "amount": { "type": "number", "required": true },
+      "card_number": { "type": "string", "pii": true }
+    }
+  },
+  "governance": {
+    "policy": { "classification": "confidential" },
+    "storage_residency": { "region": "us-east-1" }
+  },
+  "lineage": {
+    "consumers": [{ "type": "external", "id": "partner-x" }]
+  }
+}
+```
+
+## Validator Output
+
+```js
+const manifest = createDataProtocol(dataManifest);
+const { ok, results } = manifest.validate(['governance.pii_policy']);
+```
+
+Output contains warnings if:
+
+- `classification` is not `pii` while a field is marked as `pii`.
+- `storage_residency.encrypted_at_rest` is missing or false.
+- PII datasets send data to `external` consumers (catalog helper).
+
+## CLI Automation
+
+```bash
+node proto.js validate manifests/*.json --validators governance.pii_policy --strict
+```
+
+Use `--strict` in regulated environments to fail builds on warnings.

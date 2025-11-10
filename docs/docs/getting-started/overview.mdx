@@ -1,0 +1,73 @@
+---
+id: overview
+title: Cross-Protocol Manifest System Overview
+description: Understand the philosophy, scope, and capabilities of the Cross-Protocol Manifest System.
+tagline: Manifest-first platform for describing every data, API, and agent contract.
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+The Cross-Protocol Manifest System (CPMS) is a manifest-first framework for describing data sets, event streams, APIs, semantic intents, and AI agents with **zero runtime dependencies**. Every artifact—validators, SDKs, migrations, docs—is derived from the manifest, so governance and automation stay in sync.
+
+## Core Principles
+
+- **Manifest as Source of Truth** – Contracts live in JSON manifests that are immutable, signed, and versioned.
+- **Zero Dependencies** – Each protocol package is self-contained to simplify supply-chain audits.
+- **Deterministic Tooling** – Hash-based normalization plus canonical JSON ensures reproducible diffs and migrations.
+- **Delegated Validators** – Validators are pluggable, making it easy to enforce company-specific rules without patching core packages.
+- **Security by Design** – OWASP Top 10 guidance is applied to every helper: no eval, no dynamic imports, sandboxed CLI execution.
+
+## Repo at a Glance
+
+<Tabs>
+  <TabItem value="protocols" label="Protocol Packages">
+
+  | Package | Description | Key API |
+  | ------- | ----------- | ------- |
+  | `@proto/data` | Dataset schema contracts, lifecycle governance, migration helpers | `createDataProtocol`, `createDataCatalog` |
+  | `@proto/event` | Event bus contracts for Kafka/Kinesis/AsyncAPI | `createEventProtocol` |
+  | `@proto/api` | API surface specifications with OpenAPI + SDK codegen | `createApiProtocol`, `createApiCatalog` |
+  | `@proto/agent` | Agent capability manifests, guardrails, evaluation hooks | `createAgentProtocol` |
+  | `@proto/semantic` | Semantic intent graph, similarity search, criticality scoring | `createSemanticProtocol` |
+
+  </TabItem>
+  <TabItem value="tooling" label="Tooling">
+
+  - `proto.js` – Zero-install CLI with `validate`, `diff`, `generate`, `query`, `graph` commands.
+  - `benchmark.js` – Enforces hash performance ≥ 1M ops/sec and diff < 10 ms for 500-field manifests.
+  - `npm run test` – Node's test runner with coverage gates for every protocol.
+  - `cmos/` – Mission orchestration, telemetry, and parity validation.
+
+  </TabItem>
+</Tabs>
+
+## Performance Guarantees
+
+| Capability | Target | Status |
+| ---------- | ------ | ------ |
+| Hashing (FNV-1a) | 1M ops/sec | ✅
+| Hashing (SHA-256) | 100K ops/sec | ✅
+| Manifest Parsing | < 5 ms for 1K fields | ✅
+| Diff | < 10 ms for 500-field manifests | ✅
+| CLI Startup | < 500 ms | ✅
+
+## When to Use CPMS
+
+Use CPMS when you need:
+
+- A single description for data, APIs, and agents that drives automation.
+- Upgrade-safe governance with verifiable diffs and migration recipes.
+- A way to expose live documentation + playground experiences without provisioning infra.
+- Strong compliance gates (PII tracking, retention policies, lineage policies) baked into manifests.
+
+If you only need ad-hoc schema validation or post-hoc documentation, CPMS is overkill. The system shines when manifests are treated as code and reviewed like any other critical artifact.
+
+## Next Steps
+
+1. Read the [installation guide](./installation).
+2. Create your first manifest with the [quickstart](./first-manifest).
+3. Explore protocol-specific reference pages to understand advanced capabilities.
+4. Open the [live playground](/playground) to experiment without installing anything.
+
+Stay manifest-first and let the automation derive everything else.
