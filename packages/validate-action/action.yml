@@ -29,7 +29,7 @@ inputs:
     description: "Base branch or ref to compare for breaking changes (auto-detected for PRs when omitted)."
     required: false
   output-format:
-    description: "Detailed report output format: github-annotations or json."
+    description: "Detailed report format: github-annotations (default) or json (writes proto-validation-report.json)."
     required: false
     default: "github-annotations"
   proto-cli-version:
