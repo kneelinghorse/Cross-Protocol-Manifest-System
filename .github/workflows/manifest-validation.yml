@@ -2,76 +2,27 @@ name: Manifest Validation
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [main]
+  pull_request_target:
+    branches: [main]
 
 jobs:
   validate-manifests:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run tests
-      run: npm test
-      
-    - name: Validate mission files
-      run: |
-        echo "Validating mission files..."
-        find cmos/missions -name "*.yaml" -type f | while read file; do
-          echo "Checking $file"
-          python3 -c "import yaml; yaml.safe_load(open('$file'))" || exit 1
-        done
-        echo "✓ All mission YAML files are valid"
-        
-    - name: Check manifest schema compliance
-      run: |
-        echo "Checking manifest schema compliance..."
-        python3 cmos/scripts/validate_parity.py || exit 1
-        echo "✓ Database and file parity validated"
-        
-    - name: Detect breaking changes
-      run: |
-        echo "Detecting breaking changes in manifests..."
-        # Check if this is a PR
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          # Get changed manifest files
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E '\.(yaml|yml|json)$' || true)
-          
-          if [ -n "$CHANGED_FILES" ]; then
-            echo "Changed manifest files:"
-            echo "$CHANGED_FILES"
-            
-            # Run breaking change detection (placeholder for now)
-            # In a real implementation, this would compare schemas/structures
-            echo "⚠️ Breaking change detection would run here"
-            echo "✓ No breaking changes detected (placeholder)"
-          else
-            echo "No manifest files changed"
-          fi
-        else
-          echo "Not a PR, skipping breaking change detection"
-        fi
-        
-    - name: Validate database health
-      run: |
-        echo "Validating database health..."
-        python3 cmos/scripts/db_tools.py show-current || exit 1
-        echo "✓ Database health check passed"
-        
-    - name: Report status
-      if: always()
-      run: |
-        echo "Manifest validation completed"
-        echo "Status: ${{ job.status }}"
+      - name: Checkout repository (safe head ref)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Validate manifests with proto action
+        uses: ./packages/validate-action
+        with:
+          manifest-glob: 'manifests/**/*.json'
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,55 @@
+name: "Proto Manifest Validation"
+description: "Validate Cross-Protocol manifests, detect breaking changes, and report results to PRs and annotations."
+author: "Cross-Protocol Manifest System"
+branding:
+  icon: shield
+  color: purple
+inputs:
+  manifest-glob:
+    description: "Glob or newline-separated globs for manifest files to validate."
+    required: true
+    default: "**/*.proto.json"
+  fail-on-breaking:
+    description: "Fail the workflow if breaking changes are detected."
+    required: false
+    default: "true"
+  fail-on-warnings:
+    description: "Fail the workflow if any warnings (validator or PII) are produced."
+    required: false
+    default: "false"
+  comment-on-pr:
+    description: "Post or update a sticky comment on pull requests with a summary."
+    required: false
+    default: "true"
+  comment-on-pr-sentinel:
+    description: "HTML comment used to identify the action's sticky PR comment for updates."
+    required: false
+    default: "<!-- proto-validate-action -->"
+  compare-branch:
+    description: "Base branch or ref to compare for breaking changes (auto-detected for PRs when omitted)."
+    required: false
+  output-format:
+    description: "Detailed report output format: github-annotations or json."
+    required: false
+    default: "github-annotations"
+  proto-cli-version:
+    description: "proto CLI version to pin when downloading via the tool-cache."
+    required: false
+    default: "latest"
+  github-token:
+    description: "Token used for GitHub API calls (annotations, PR comments, content fetch)."
+    required: true
+outputs:
+  validated-count:
+    description: "Total manifests discovered and processed."
+  passed-count:
+    description: "Number of manifests without errors."
+  failed-count:
+    description: "Number of manifests with validation errors."
+  breaking-changes-count:
+    description: "Total breaking changes detected across manifests."
+  validation-report-json:
+    description: "Minified JSON payload representing the validation summary."
+runs:
+  using: "node20"
+  main: "dist/index.js"

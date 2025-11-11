@@ -1,0 +1,47 @@
+{
+  "name": "proto-validate-action",
+  "version": "0.1.0",
+  "private": false,
+  "description": "GitHub Action for validating Cross-Protocol manifests with breaking-change detection and PR reporting.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "action.yml"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "node --test" 
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "github-action",
+    "manifests",
+    "validation",
+    "breaking-changes"
+  ],
+  "author": "Cross-Protocol Manifest System",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kneelinghorse/Cross-Protocol-Manifest-System",
+    "directory": "packages/validate-action"
+  },
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0",
+    "@actions/glob": "^0.4.0",
+    "@actions/tool-cache": "^2.0.1",
+    "@proto/data": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0"
+  }
+}
