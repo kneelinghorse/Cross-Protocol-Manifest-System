@@ -64,18 +64,20 @@ const config: Config = {
       },
     ],
     function protocolAliasPlugin() {
+      const protocolPackages = ['data', 'event', 'api', 'agent', 'semantic'] as const;
+      const aliasMap = protocolPackages.reduce<Record<string, string>>((aliases, pkg) => {
+        const resolved = path.resolve(__dirname, `../packages/${pkg}/dist/index.js`);
+        aliases[`@cpms/${pkg}`] = resolved;
+        aliases[`@proto/${pkg}`] = resolved; // backward compatibility with older docs/examples
+        return aliases;
+      }, {});
+
       return {
         name: 'protocol-alias-plugin',
         configureWebpack() {
           return {
             resolve: {
-              alias: {
-                '@cpms/data': path.resolve(__dirname, '../packages/data/dist/index.js'),
-                '@cpms/event': path.resolve(__dirname, '../packages/event/dist/index.js'),
-                '@cpms/api': path.resolve(__dirname, '../packages/api/dist/index.js'),
-                '@cpms/agent': path.resolve(__dirname, '../packages/agent/dist/index.js'),
-                '@cpms/semantic': path.resolve(__dirname, '../packages/semantic/dist/index.js'),
-              },
+              alias: aliasMap,
             },
           };
         },
