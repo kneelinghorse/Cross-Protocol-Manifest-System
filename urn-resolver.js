@@ -10,10 +10,10 @@
  */
 
 import { dget } from './utils.js';
-import { createCatalogSystem, parseURN as catalogParseURN, resolveURN as catalogResolveURN } from './catalog_system_v_1_1_1.js';
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, readdirSync } from 'fs';
 import { createServer } from 'http';
 import { URL } from 'url';
+import { join, resolve as resolvePath } from 'path';
 
 // URN parsing regex for urn:proto:{type}:{id}@{version}#{fragment}
 // Version can be: v1.1.1, 1.1.1, or latest
@@ -73,6 +73,11 @@ function validateURNFormat(urnString) {
  * @returns {Object} Compatibility result
  */
 function checkVersionCompatibility(requestedVersion, actualVersion) {
+  const sanitize = (value) => {
+    if (!value) return value;
+    return value.startsWith('v') ? value.slice(1) : value;
+  };
+
   if (requestedVersion === 'latest') {
     return {
       compatible: true,
@@ -80,8 +85,8 @@ function checkVersionCompatibility(requestedVersion, actualVersion) {
     };
   }
 
-  const requested = parseSemanticVersion(requestedVersion);
-  const actual = parseSemanticVersion(actualVersion);
+  const requested = parseSemanticVersion(sanitize(requestedVersion));
+  const actual = parseSemanticVersion(sanitize(actualVersion));
 
   if (!requested || !actual) {
     return {
@@ -125,10 +130,17 @@ function checkVersionCompatibility(requestedVersion, actualVersion) {
  * @param {string} version - Version string (e.g., "1.2.3")
  * @returns {Object} Version components or null if invalid
  */
+const SEMVER_REGEX = /^(\d+)\.(\d+)\.(\d+)$/;
+
 function parseSemanticVersion(version) {
-  // Remove 'v' prefix if present
-  const cleanVersion = version.startsWith('v') ? version.slice(1) : version;
-  const match = cleanVersion.match(/^(\d+)\.(\d+)\.(\d+)$/);
+  if (typeof version !== 'string') {
+    return null;
+  }
+  const normalized = version.trim();
+  if (!normalized || normalized.startsWith('v')) {
+    return null;
+  }
+  const match = normalized.match(SEMVER_REGEX);
   if (!match) {
     return null;
   }
@@ -148,48 +160,62 @@ function parseSemanticVersion(version) {
  * @param {Object} options - Resolution options
  * @returns {Object} Loaded manifest or null
  */
+function compareVersions(a, b) {
+  if (a.major !== b.major) return a.major - b.major;
+  if (a.minor !== b.minor) return a.minor - b.minor;
+  return a.patch - b.patch;
+}
+
 function loadManifestFromFile(type, id, version, options = {}) {
   const { manifestDir = './manifests' } = options;
-  
-  // Construct file path: manifests/{type}/{id}@{version}.json
-  const filename = `${id}@${version}.json`;
-  const filepath = `${manifestDir}/${type}/${filename}`;
+  const rootDir = resolvePath(manifestDir);
+  const dirPath = join(rootDir, type);
 
-  if (!existsSync(filepath)) {
-    // Try without version for latest
-    if (version === 'latest') {
-      const latestPath = `${manifestDir}/${type}/${id}.json`;
-      if (existsSync(latestPath)) {
-        try {
-          const content = readFileSync(latestPath, 'utf8');
-          return JSON.parse(content);
-        } catch (error) {
-          return null;
-        }
-      }
+  const readManifest = (fullPath) => {
+    if (!existsSync(fullPath)) return null;
+    try {
+      const content = readFileSync(fullPath, 'utf8');
+      return JSON.parse(content);
+    } catch {
+      return null;
     }
-    
-    // Try with 'v' prefix for version
-    const vFilename = `${id}@v${version}.json`;
-    const vFilepath = `${manifestDir}/${type}/${vFilename}`;
-    if (existsSync(vFilepath)) {
-      try {
-        const content = readFileSync(vFilepath, 'utf8');
-        return JSON.parse(content);
-      } catch (error) {
-        return null;
-      }
+  };
+
+  if (version === 'latest') {
+    if (!existsSync(dirPath)) {
+      return null;
     }
-    
-    return null;
+
+    const files = readdirSync(dirPath);
+    const candidates = files
+      .filter(name => name.startsWith(`${id}@`) && name.endsWith('.json'))
+      .map(name => {
+        const rawVersion = name.slice(id.length + 1, -5); // remove id@ and .json
+        const clean = rawVersion.startsWith('v') ? rawVersion.slice(1) : rawVersion;
+        const parsed = parseSemanticVersion(clean);
+        return parsed ? { name, parsed } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => compareVersions(b.parsed, a.parsed));
+
+    if (candidates.length > 0) {
+      return readManifest(`${dirPath}/${candidates[0].name}`);
+    }
+
+    return readManifest(join(dirPath, `${id}.json`));
   }
 
-  try {
-    const content = readFileSync(filepath, 'utf8');
-    return JSON.parse(content);
-  } catch (error) {
-    return null;
+  const directPath = join(dirPath, `${id}@${version}.json`);
+  const directManifest = readManifest(directPath);
+  if (directManifest) return directManifest;
+
+  if (!version.startsWith('v')) {
+    const prefixedPath = join(dirPath, `${id}@v${version}.json`);
+    const prefixedManifest = readManifest(prefixedPath);
+    if (prefixedManifest) return prefixedManifest;
   }
+
+  return null;
 }
 
 /**
@@ -211,17 +237,32 @@ async function resolveURN(urnString, options = {}) {
     };
   }
 
+  const findCatalogManifest = () => {
+    const items = catalog?.items || [];
+    for (const item of items) {
+      const candidate = item.manifest ? item.manifest() : item;
+      if (!candidate) continue;
+      const inferredType = (candidate.type || (candidate.dataset ? 'data' : candidate.api ? 'api' : candidate.event ? 'event' : candidate.agent ? 'agent' : candidate.semantics ? 'semantic' : 'unknown')).toLowerCase();
+      const inferredId = candidate.id || candidate.dataset?.name || candidate.api?.name || candidate.event?.name || candidate.agent?.id || candidate.semantics?.id;
+      if (inferredType === parsed.type && inferredId === parsed.id) {
+        return candidate;
+      }
+    }
+    return null;
+  };
+
   let manifest;
   
   // Resolve using catalog if provided
   if (catalog && mode === 'catalog') {
-    const catalogItem = catalogResolveURN({ items: catalog.items || [] }, urnString);
-    if (catalogItem) {
-      manifest = catalogItem.manifest ? catalogItem.manifest() : catalogItem;
-    }
+    manifest = findCatalogManifest();
   } else {
     // Static file resolution
     manifest = loadManifestFromFile(parsed.type, parsed.id, parsed.version, { manifestDir });
+  }
+
+  if (!manifest && parsed.version !== 'latest') {
+    manifest = loadManifestFromFile(parsed.type, parsed.id, 'latest', { manifestDir });
   }
 
   if (!manifest) {
@@ -392,10 +433,18 @@ function createURNResolver(config = {}) {
     };
   }
 
+  async function batchResolveWithConfig(urns, options = {}) {
+    const results = [];
+    for (const urn of urns) {
+      results.push(await resolveWithCache(urn, options));
+    }
+    return results;
+  }
+
   return {
     resolve: resolveWithCache,
-    validate: validateURN,
-    batchResolve: batchResolveURN,
+    validate: (urnString, options = {}) => validateURN(urnString, { ...config, ...options }),
+    batchResolve: batchResolveWithConfig,
     parse: parseURN,
     clearCache,
     getCacheStats,
@@ -539,9 +588,18 @@ function createURNHTTPServer(config = {}) {
   return {
     server,
     resolver,
-    start: () => new Promise((resolve) => {
+    start: () => new Promise((resolve, reject) => {
+      const handleError = (error) => {
+        server.off('error', handleError);
+        reject(error);
+      };
+
+      server.once('error', handleError);
       server.listen(port, () => {
-        resolve({ port, url: `http://localhost:${port}` });
+        server.off('error', handleError);
+        const address = server.address();
+        const actualPort = typeof address === 'object' ? address.port : port;
+        resolve({ port: actualPort, url: `http://localhost:${actualPort}` });
       });
     }),
     stop: () => new Promise((resolve) => {
