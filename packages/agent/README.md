@@ -1,44 +1,46 @@
-# @proto/agent
+# @cpms/agent
 
-Agent Protocol v1.1.1 for describing AI/automation agents, their capabilities, resources, delegation graph, and URN bindings. Ships immutable helpers for validation, cataloging, diffing, and normalization.
+Agent Protocol v1.1.1 describes AI/automation agents, their capabilities, resources, delegation graph, and URN bindings. Build catalogs of agents, diff revisions, and emit agent cards without relying on external packages.
 
-## Install
+## Installation
 
 ```bash
-pnpm add @proto/agent
-# or
-npm install @proto/agent
+npm install @cpms/agent
+# pnpm add @cpms/agent
 ```
 
-## Usage
+## Quick Example
 
 ```js
-import { createAgentProtocol } from '@proto/agent';
+import { createAgentProtocol } from '@cpms/agent';
 
-const agent = createAgentProtocol({
+const manifest = {
   agent: { id: 'proto.writer', name: 'Protocol Writer', version: '1.1.1' },
   capabilities: {
-    tools: [{ name: 'manifest.validate', description: 'Validate manifests' }]
-  }
-});
+    tools: [
+      { name: 'manifest.validate', description: 'Run validators against manifests' },
+      { name: 'manifest.diff', description: 'Detect drift between revisions' }
+    ]
+  },
+  lifecycle: { status: 'active' }
+};
 
+const agent = createAgentProtocol(manifest);
 const validation = agent.validate(['agent.identity', 'capabilities.tools']);
-const card = agent.generateAgentCard?.();
+const card = agent.generateAgentCard();
 ```
 
 ## Features
 
-- Immutable manifest factory with lifecycle metadata.
-- Validator registry (`registerValidator`, `runValidators`).
-- Catalog builder for relationship analysis.
-- Diff + normalization helpers for comparing agent revisions.
-- Query DSL for delegations and resource discovery.
+- Immutable manifest factory + diff helpers for tracking capability drift.
+- Validator registry covering identity, capability coverage, delegation loops, and governance.
+- Agent card/document generation for quick sharing.
+- Catalog helpers for URN-backed relationship graphs.
+- Runs anywhere Node 20+ is available—no dependencies, no network calls.
 
-## Scripts
+## Documentation
 
-- `pnpm build` – tsup bundle to `dist/`.
-- `pnpm dev` – watch mode.
-- `pnpm check-size` – enforce size budget.
+Full documentation: https://cpms-docs.pages.dev/docs/protocols/agent
 
 ## License
 

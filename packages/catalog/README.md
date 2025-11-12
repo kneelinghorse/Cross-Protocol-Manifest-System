@@ -1,22 +1,21 @@
-# @proto/catalog
+# @cpms/catalog
 
-Catalog System v1.1.1 unifies manifests across protocols using URNs. It resolves entities, analyzes relationships, detects dependency cycles, and validates catalog health.
+Catalog System v1.1.1 unifies every manifest via URNs. Resolve entities, traverse relationships, detect dependency cycles, and emit health reports without adding dependencies.
 
-## Install
+## Installation
 
 ```bash
-pnpm add @proto/catalog
-# or
-npm install @proto/catalog
+npm install @cpms/catalog
+# pnpm add @cpms/catalog
 ```
 
-## Usage
+## Quick Example
 
 ```js
-import { createCatalogSystem } from '@proto/catalog';
+import { createCatalogSystem } from '@cpms/catalog';
 
 const catalog = createCatalogSystem([
-  { urn: 'urn:proto:data:users@1.1.1', dataset: { name: 'users' } },
+  { urn: 'urn:proto:data:checkout_events@1.1.1', dataset: { name: 'checkout_events' } },
   { urn: 'urn:proto:api:payments@1.1.0', api: { name: 'payments' } }
 ]);
 
@@ -27,16 +26,15 @@ const report = catalog.generateSystemReport();
 
 ## Features
 
-- URN parsing, building, resolution, and generation helpers.
-- Relationship graph + cycle detection across manifests.
-- Catalog-level validation with governance + lifecycle checks.
-- Deterministic system reports for telemetry + release notes.
+- URN parsing/building helpers plus lookup APIs for any manifest type.
+- Relationship graphs, cycle detection, and dependency summaries.
+- Catalog-level validators for governance, lifecycle, lineage, and drift.
+- Deterministic system reports suitable for docs, telemetry, or audits.
+- Pure ESM module that runs in Node 20+ with zero dependencies.
 
-## Scripts
+## Documentation
 
-- `pnpm build` – bundle to `dist/`.
-- `pnpm dev` – watch for local edits.
-- `pnpm check-size` – guard 20kb bundle budget.
+Full documentation: https://cpms-docs.pages.dev/docs/examples/06-cross-protocol-system-report
 
 ## License
 

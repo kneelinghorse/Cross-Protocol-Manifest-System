@@ -1,50 +1,51 @@
-# @proto/api
+# @cpms/api
 
-API Protocol v1.1.1 – declarative manifests for REST/HTTP services with OpenAPI generation, validator chaining, diffing, and SDK synthesis.
+API Protocol v1.1.1 for declarative HTTP/REST contracts. Author manifests, run validator chains, generate OpenAPI documents, and synthesize SDKs — all without pulling in extra dependencies.
 
-## Install
+## Installation
 
 ```bash
-pnpm add @proto/api
-# or
-npm install @proto/api
+npm install @cpms/api
+# pnpm add @cpms/api
 ```
 
-## Usage
+## Quick Example
 
 ```js
-import { createApiProtocol } from '@proto/api';
+import { createApiProtocol } from '@cpms/api';
 
-const api = createApiProtocol({
+const manifest = {
   api: { name: 'payments', version: '1.1.0' },
-  servers: { list: [{ url: 'https://api.example.com' }] },
+  servers: { list: [{ url: 'https://api.example.com', environment: 'prod' }] },
   endpoints: {
     paths: {
       '/payments': {
         summary: 'Create payment',
-        responses: { '200': { description: 'Accepted' } }
+        method: 'POST',
+        auth: { type: 'oauth2', scopes: ['payments:write'] },
+        responses: { '200': { description: 'Payment accepted' } }
       }
     }
   }
-});
+};
 
-const validation = api.validate(['api.shape', 'endpoints.security']);
+const api = createApiProtocol(manifest);
+const validation = api.validate(['api.shape', 'security.oauth']);
 const openapi = api.generateOpenApi();
 const sdk = api.generateClientSdk('javascript');
 ```
 
 ## Features
 
-- Rich manifest schema with lifecycle + governance metadata.
-- Built-in validators for surface coverage, security, rate limits, and dependency analysis.
-- OpenAPI 3.0 document synthesis + SDK generation.
-- Catalog + dependency analysis helpers for cross-protocol views.
+- Immutable manifest factory with lifecycle + governance metadata baked in.
+- Validator registry shipping coverage, security, dependency, and quota checks.
+- OpenAPI 3.0.3 generation plus language-specific SDK skeletons.
+- Diff helpers for catching breaking changes between contract versions.
+- Works standalone in CI, the `proto` CLI, or bespoke tooling.
 
-## Scripts
+## Documentation
 
-- `pnpm build` – produce dual ESM/CJS bundles.
-- `pnpm dev` – watch rebuilds.
-- `pnpm check-size` – ensures 15kb budget.
+Full documentation: https://cpms-docs.pages.dev/docs/protocols/api
 
 ## License
 

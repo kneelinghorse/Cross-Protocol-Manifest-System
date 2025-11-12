@@ -1,41 +1,42 @@
-# @proto/cli
+# @cpms/cli
 
-The official Cross-Protocol Manifest System CLI. Provides `proto` commands for validating manifests, diffing revisions, generating migrations, running semantic queries, and rendering graph views.
+Official `proto` CLI for the Cross-Protocol Manifest System. Validate manifests, diff revisions, generate migrations, run catalog queries, and render graphs straight from the terminal.
 
-## Install
-
-```bash
-pnpm add -D @proto/cli
-# or globally
-pnpm add -g @proto/cli
-```
-
-## Usage
+## Installation
 
 ```bash
-# Validate a manifest
-proto validate --file manifests/data/users.json
-
-# Diff two manifests
-proto diff --from manifests/data/users-v1.json --to manifests/data/users-v2.json
-
-# Generate migrations
-proto generate migration --from manifest-a.json --to manifest-b.json
+npm install --save-dev @cpms/cli
+# Optional global install: npm install -g @cpms/cli
 ```
 
-The CLI automatically prefers the published `@proto/data` package but falls back to the local zero-dependency implementation when running inside this repository.
+## Quick Example
 
-## Commands
+```bash
+# Validate a manifest (text or JSON output)
+npx proto validate --manifest manifests/data/users.json --format text
+npx proto validate --manifest manifests/data/users.json --format json
 
-- `validate` – run manifest validators and report issues.
-- `diff` – structural diff with breaking-change detection.
-- `generate migration` – produce ordered migration steps between manifests.
-- `query` / `graph` – semantic queries and relationship graphs (from Sprint 3 enhancements).
+# Diff two manifest revisions
+npx proto diff --from manifests/data/users-v1.json --to manifests/data/users-v2.json
 
-## Scripts
+# Generate an ordered migration plan
+npx proto generate migration --from manifests/data/users-v1.json --to manifests/data/users-v2.json
 
-- `pnpm build` – bundle CLI to `dist/proto.js`.
-- `pnpm dev` – watch mode for local development.
+# Query manifests in bulk
+npx proto query "dataset.name:=:checkout_events" --manifest-dir ./manifests --limit 5
+```
+
+## Features
+
+- Ships with the zero-dependency Data Protocol fallback; automatically uses published `@cpms/data` when available.
+- Deterministic text + JSON output for CI, along with exit codes for gating.
+- Diff + migration helpers built on immutable manifest factories.
+- Query + graph commands for URN-aware discovery across manifest directories.
+- Runs anywhere Node 20+ is available; no external services required.
+
+## Documentation
+
+Full documentation: https://cpms-docs.pages.dev/docs/guides/cli
 
 ## License
 

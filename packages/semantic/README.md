@@ -1,43 +1,46 @@
-# @proto/semantic
+# @cpms/semantic
 
-Semantic Protocol v3.2.0 delivers self-enriching semantic manifests that compute intent, criticality, confidence, semantic vectors, and rich protocol bindings for discovery and governance.
+Semantic Protocol v3.2.0 adds self-enriching semantic surfaces to any manifest. Compute intent, criticality, similarity vectors, and bindings without leaving Node.
 
-## Install
+## Installation
 
 ```bash
-pnpm add @proto/semantic
-# or
-npm install @proto/semantic
+npm install @cpms/semantic
+# pnpm add @cpms/semantic
 ```
 
-## Usage
+## Quick Example
 
 ```js
-import { createSemanticProtocol } from '@proto/semantic';
+import { createSemanticProtocol, createSemanticCatalog } from '@cpms/semantic';
 
 const semantic = createSemanticProtocol({
-  id: 'semantic.intent.resolver',
-  element: { type: 'service', role: 'intent-resolver' },
-  semantics: { purpose: 'interpret manifest intent' }
+  id: 'semantic.intent.checkout',
+  element: { type: 'service', role: 'checkout-intent' },
+  semantics: {
+    purpose: 'capture checkout signals',
+    criticality: 'high',
+    signals: ['cart_abandonment', 'fraud_alert']
+  }
 });
 
 const manifest = semantic.manifest();
 const docs = semantic.generateDocs();
 const catalog = createSemanticCatalog([semantic]);
+const suggestions = catalog.discoverRelationships(0.8);
 ```
 
 ## Features
 
-- Automatic enrichment: intent, criticality, confidence, semantic vectors.
-- Protocol bindings (`requires` / `provides`) with validation.
-- Catalog helpers for similarity discovery and cross-validation.
-- Deterministic hashing for diff-friendly signatures.
+- Automatic enrichment: intent, criticality, similarity vectors, and context bindings.
+- Validation of semantic surfaces, resource requirements, and downstream dependencies.
+- Catalog + search helpers for linking related intents or detecting drift.
+- Deterministic hashing + immutable updates for Git-friendly diffs.
+- Works alongside `@cpms/data`, `@cpms/api`, and `@cpms/event` for full cross-protocol coverage.
 
-## Scripts
+## Documentation
 
-- `pnpm build` – create CJS/ESM bundles + types.
-- `pnpm dev` – watch builds.
-- `pnpm check-size` – enforce size constraints.
+Full documentation: https://cpms-docs.pages.dev/docs/protocols/semantic
 
 ## License
 
