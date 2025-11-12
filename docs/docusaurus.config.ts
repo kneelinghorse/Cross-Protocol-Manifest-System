@@ -65,7 +65,7 @@ const config: Config = {
       },
     ],
     function protocolAliasPlugin() {
-      const protocolPackages = ['data', 'event', 'api', 'agent', 'semantic'] as const;
+      const protocolPackages = ['core', 'data', 'event', 'api', 'agent', 'semantic', 'catalog'] as const;
       const aliasMap = protocolPackages.reduce<Record<string, string>>((aliases, pkg) => {
         const distEntry = path.resolve(__dirname, `../packages/${pkg}/dist/index.js`);
         const srcEntry = path.resolve(__dirname, `../packages/${pkg}/src/index.ts`);
