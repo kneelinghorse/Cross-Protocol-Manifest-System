@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import {fileURLToPath} from 'url';
 import {themes as prismThemes} from 'prism-react-renderer';
@@ -66,7 +67,9 @@ const config: Config = {
     function protocolAliasPlugin() {
       const protocolPackages = ['data', 'event', 'api', 'agent', 'semantic'] as const;
       const aliasMap = protocolPackages.reduce<Record<string, string>>((aliases, pkg) => {
-        const resolved = path.resolve(__dirname, `../packages/${pkg}/dist/index.js`);
+        const distEntry = path.resolve(__dirname, `../packages/${pkg}/dist/index.js`);
+        const srcEntry = path.resolve(__dirname, `../packages/${pkg}/src/index.ts`);
+        const resolved = fs.existsSync(distEntry) ? distEntry : srcEntry;
         aliases[`@cpms/${pkg}`] = resolved;
         aliases[`@proto/${pkg}`] = resolved; // backward compatibility with older docs/examples
         return aliases;
