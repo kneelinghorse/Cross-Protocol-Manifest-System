@@ -70,11 +70,11 @@ const config: Config = {
           return {
             resolve: {
               alias: {
-                '@proto/data': path.resolve(__dirname, '../packages/data/dist/index.js'),
-                '@proto/event': path.resolve(__dirname, '../packages/event/dist/index.js'),
-                '@proto/api': path.resolve(__dirname, '../packages/api/dist/index.js'),
-                '@proto/agent': path.resolve(__dirname, '../packages/agent/dist/index.js'),
-                '@proto/semantic': path.resolve(__dirname, '../packages/semantic/dist/index.js'),
+                '@cpms/data': path.resolve(__dirname, '../packages/data/dist/index.js'),
+                '@cpms/event': path.resolve(__dirname, '../packages/event/dist/index.js'),
+                '@cpms/api': path.resolve(__dirname, '../packages/api/dist/index.js'),
+                '@cpms/agent': path.resolve(__dirname, '../packages/agent/dist/index.js'),
+                '@cpms/semantic': path.resolve(__dirname, '../packages/semantic/dist/index.js'),
               },
             },
           };
