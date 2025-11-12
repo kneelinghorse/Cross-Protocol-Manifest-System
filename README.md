@@ -153,6 +153,7 @@ node cmos/context/integration_test_runner.js
 
 ## 📚 Documentation
 
+- **Live Site (Cloudflare Pages):** https://cpms-docs.pages.dev — built from `docs/` and deployed automatically from `main` via [deploy-docs.yml](.github/workflows/deploy-docs.yml). Configure the workflow secrets `CLOUDFLARE_API_TOKEN` (Pages:Edit + Pages:Deploy) and `CLOUDFLARE_ACCOUNT_ID`, then set the project to `cpms-docs` to receive production + preview deployments. Add a custom domain (for example `cross-protocol.dev`) in Cloudflare once DNS is ready.
 - **Architecture:** [Cross-Protocol Manifest System-k2.md](cmos/foundational-docs/Cross-Protocol%20Manifest%20System-k2.md)
 - **CMOS Operations:** [operations-guide.md](cmos/docs/operations-guide.md)
 - **Getting Started:** [getting-started.md](cmos/docs/getting-started.md)
