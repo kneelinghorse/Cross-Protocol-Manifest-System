@@ -37,14 +37,14 @@ jobs:
       - name: Security audit
         run: pnpm audit --prod
 
+      - name: Build packages
+        run: pnpm build
+
       - name: Run root tests
         run: pnpm test
 
       - name: Run workspace tests
         run: pnpm test:workspace
-
-      - name: Build packages
-        run: pnpm build
 
       - name: Configure npm auth
         run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc

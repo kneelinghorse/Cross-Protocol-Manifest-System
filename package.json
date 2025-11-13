@@ -8,7 +8,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
-    "test": "node --test",
+    "test": "pnpm build && node --test agent-protocol.test.js api-protocol.test.js data-protocol.test.js event-protocol.test.js proto.test.js utils.test.js urn-resolver.test.js",
     "test:workspace": "turbo run test",
     "test:coverage": "node --test --experimental-test-coverage",
     "benchmark": "node benchmark.js",
