@@ -3,6 +3,9 @@
   "type": "agent",
   "name": "Customer Support Agent",
   "version": "1.0.0",
+  "dataset": {
+    "name": "support_agent"
+  },
   "capabilities": {
     "tools": ["refund", "escalate", "lookup_order"]
   },
