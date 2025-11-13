@@ -1,16 +1,6 @@
 name: Deploy Documentation Site
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'docs/**'
-      - 'packages/**'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
-      - 'package.json'
-      - 'turbo.json'
-      - '.github/workflows/deploy-docs.yml'
   workflow_dispatch:
 
 concurrency:
