@@ -1,7 +1,7 @@
 {
   "name": "proto-validate-action",
   "version": "0.1.0",
-  "private": false,
+  "private": true,
   "description": "GitHub Action for validating Cross-Protocol manifests with breaking-change detection and PR reporting.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
