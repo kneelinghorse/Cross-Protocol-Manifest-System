@@ -10,7 +10,7 @@ objective: |
 
 context: |
   Sprint 4 focuses on Release & Ecosystem preparation. The project currently has a monolithic structure with all protocols in the root directory.
-  To release to npm as modular packages (@proto/core, @proto/data, etc.), we need to:
+  To release to npm as modular packages (@cpms/core, @cpms/data, etc.), we need to:
   - Restructure into a monorepo
   - Choose tooling that supports zero-dependency protocols
   - Ensure clean separation between packages
@@ -173,7 +173,7 @@ packages/
 Option B: Scoped Monorepo
 ```
 packages/
-  ├── @proto/
+  ├── @cpms/
   │   ├── core/
   │   ├── data/
   ...
@@ -191,7 +191,7 @@ packages/
 
 ### 3. Shared Code Strategy
 - Copy utils.js into each package (current approach)
-- Extract to @proto/core and create internal dependency
+- Extract to @cpms/core and create internal dependency
 - Use dual-package strategy (ESM + CJS)
 
 ### 4. Versioning Strategy

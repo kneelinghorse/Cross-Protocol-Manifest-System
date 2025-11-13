@@ -4,7 +4,7 @@ title: API Protocol Reference
 description: Model REST and GraphQL APIs with contract-aware manifests.
 ---
 
-`@proto/api` describes HTTP surfaces, authentication, rate limits, and SDK metadata. It can emit OpenAPI JSON plus typed SDK stubs.
+`@cpms/api` describes HTTP surfaces, authentication, rate limits, and SDK metadata. It can emit OpenAPI JSON plus typed SDK stubs.
 
 ## Key Sections
 
@@ -17,7 +17,7 @@ description: Model REST and GraphQL APIs with contract-aware manifests.
 ## Usage
 
 ```ts
-import { createApiProtocol } from '@proto/api';
+import { createApiProtocol } from '@cpms/api';
 
 const payments = createApiProtocol(manifest);
 const { ok, results } = payments.validate();

@@ -11,7 +11,7 @@ Validation happens everywhere—CLI, CI/CD, and the browser playground all use t
 Validators are registered via `registerValidator(name, fn)` and run through `protocol.validate([names])`.
 
 ```js
-import { createDataProtocol, registerValidator } from '@proto/data';
+import { createDataProtocol, registerValidator } from '@cpms/data';
 
 registerValidator('quality.freshness', (manifest) => {
   const ts = manifest.quality?.freshness_ts;
@@ -32,7 +32,7 @@ Validators return `{ ok, issues }` where each issue contains `path`, `msg`, and 
 Use catalogs when validating many manifests together:
 
 ```js
-import { createDataCatalog } from '@proto/data';
+import { createDataCatalog } from '@cpms/data';
 
 const catalog = createDataCatalog(manifests.map(createDataProtocol));
 const run = catalog.validateAll(['core.shape']);
@@ -68,7 +68,7 @@ node proto.js validate manifests/*.json --validators governance.pii_policy
 The Docusaurus playground mirrors the CLI pipeline:
 
 1. Monaco enforces a JSON schema for quick feedback.
-2. A dedicated web worker imports the same protocol packages (`@proto/data`, `@proto/api`, ...).
+2. A dedicated web worker imports the same protocol packages (`@cpms/data`, `@cpms/api`, ...).
 3. Results stream back to the editor along with semantic scoring and run duration metadata.
 
 Because every environment runs the same pure functions, you can trust that a passing manifest in the playground will also pass CI/CD and production checks.

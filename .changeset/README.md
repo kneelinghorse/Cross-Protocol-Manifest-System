@@ -1,6 +1,6 @@
 # Changesets
 
-This repository uses [Changesets](https://github.com/changesets/changesets) to manage independent versions for each `@proto/*` package.
+This repository uses [Changesets](https://github.com/changesets/changesets) to manage independent versions for each `@cpms/*` package.
 
 ## Workflow
 
@@ -10,4 +10,4 @@ This repository uses [Changesets](https://github.com/changesets/changesets) to m
 4. When you're ready to release, run `pnpm version-packages` to apply bumps.
 5. Push the release PR — merging it triggers the publish workflow.
 
-All scoped packages are published publicly to npm under the `@proto` organization. Internal helpers (`@proto/utils`) remain ignored/private.
+All scoped packages are published publicly to npm under the `@cpms` organization. Internal helpers (`@cpms/utils`) remain ignored/private.

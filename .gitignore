@@ -29,6 +29,7 @@ Thumbs.db
 
 # Build and Distribution
 dist/
+!packages/validate-action/dist/
 build/
 .turbo/
 *.tgz

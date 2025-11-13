@@ -12,7 +12,25 @@
 // ————————————————————————————————————————————————————————————————
 // Tiny shared utils (zero deps)
 // ————————————————————————————————————————————————————————————————
-const clone = x => JSON.parse(JSON.stringify(x));
+const clone = (x) => {
+  try {
+    return JSON.parse(JSON.stringify(x));
+  } catch {
+    if (typeof globalThis.structuredClone === 'function') {
+      try {
+        return structuredClone(x);
+      } catch { /* fall through */ }
+    }
+    const seen = new WeakSet();
+    return JSON.parse(JSON.stringify(x, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) return '[Circular]';
+        seen.add(value);
+      }
+      return value;
+    }));
+  }
+};
 function jsonCanon(v){ if(v===null||typeof v!=='object') return JSON.stringify(v);
   if(Array.isArray(v)) return '['+v.map(jsonCanon).join(',')+']';
   const k=Object.keys(v).sort(); return '{'+k.map(x=>JSON.stringify(x)+':'+jsonCanon(v[x])).join(',')+'}'; }
@@ -148,17 +166,19 @@ class SemanticProtocolV32 {
   
   _normalizeBindings(bindings = {}) {
     const norm = {};
-    for (const key of ['api', 'event', 'workflow', 'data']) {
-        const bindingList = bindings[key] || [];
-        norm[key] = bindingList
-          .filter(b => b && typeof b === 'object') // Ensure b is an object
-          .map(b => ({
-            urn: b.urn,
-            purpose: b.purpose || undefined,
-            requires: b.requires || undefined,
-            provides: b.provides || undefined
-          }))
-          .filter(b => b.urn && isURN(b.urn)); // Check that b.urn exists and is valid
+    const keys = Object.keys(bindings);
+    if (keys.length === 0) return {};
+    for (const key of keys) {
+      const bindingList = Array.isArray(bindings[key]) ? bindings[key] : [bindings[key]];
+      norm[key] = bindingList
+        .filter(b => b && typeof b === 'object')
+        .map(b => ({
+          urn: b.urn,
+          purpose: b.purpose || undefined,
+          requires: b.requires || undefined,
+          provides: b.provides || undefined
+        }))
+        .filter(b => typeof b.urn === 'string' && b.urn.length > 0);
     }
     return norm;
   }
@@ -177,25 +197,45 @@ class SemanticProtocolV32 {
   
   query(m, expr){
     if (!expr || !expr.includes(':')) return false;
-    const [p, o, ...r] = String(expr).split(':');
-    const rhs = r.join(':');
-    const lhs = dget(m, p.replace(/\[(\d+)\]/g, '.$1')); // Fix path parsing
-    
-    // Handle undefined/null lhs
-    if (lhs === undefined || lhs === null) {
-      if (o === '=') return rhs === 'undefined' || rhs === 'null' || rhs === '';
-      return false;
+    const segments = String(expr).split(':');
+    const path = segments.shift();
+    if (!path) return false;
+    let op = segments.shift() || '=';
+    let rhs = segments.join(':');
+
+    if (segments.length === 0) {
+      const opMatch = op.match(/^(>=|<=|>|<|=)(.*)$/);
+      if (opMatch) {
+        op = opMatch[1];
+        rhs = opMatch[2];
+      } else if (op === 'contains') {
+        rhs = '';
+      } else {
+        rhs = op;
+        op = '=';
+      }
     }
-    
-    switch(o) {
+
+    rhs = rhs ?? '';
+    if (op === 'contains' && !rhs) return false;
+
+    const lhs = dget(m, path.replace(/\[(\d+)\]/g, '.$1'));
+    if (lhs === undefined || lhs === null) return false;
+
+    switch(op) {
       case 'contains':
         return JSON.stringify(lhs).includes(rhs);
       case '=':
+      case ':=:':
         return String(lhs) === rhs;
       case '>':
         return Number(lhs) > Number(rhs);
       case '<':
         return Number(lhs) < Number(rhs);
+      case '>=':
+        return Number(lhs) >= Number(rhs);
+      case '<=':
+        return Number(lhs) <= Number(rhs);
       default:
         return false;
     }

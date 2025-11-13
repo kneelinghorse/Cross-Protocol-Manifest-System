@@ -3,7 +3,7 @@
  * zero-dependency implementation that lives inside this repository.
  * This keeps the examples runnable even before the packages are published.
  *
- * @param {string} specifier - e.g., '@proto/data'
+ * @param {string} specifier - e.g., '@cpms/data'
  * @param {string} fallbackRelativePath - path relative to this helper file
  * @returns {Promise<Record<string, any>>}
  */

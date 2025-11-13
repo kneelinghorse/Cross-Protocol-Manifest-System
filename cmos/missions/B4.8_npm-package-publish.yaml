@@ -1,0 +1,365 @@
+# Mission: B4.8 Publish Packages to npm Registry
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.8_npm-package-publish"
+version: "1.0.0"
+
+objective: |
+  Publish all 8 @cpms packages to npm registry as v0.4.0.
+  Setup npm organization, configure authentication, and execute first release using Changesets workflow.
+  Enable developers to install packages via npm install @cpms/data.
+
+context: |
+  Publishing infrastructure is ready from B4.3:
+  - Changesets configured (.changeset/ directory)
+  - Publishing workflow created (.github/workflows/publish-packages.yml)
+  - All packages built with dist/ outputs
+  - Zero-dependency constraint verified
+  
+  Need to:
+  - Create npm organization @cpms (or verify it exists)
+  - Add NPM_TOKEN to GitHub secrets
+  - Create changeset for v0.4.0 release
+  - Trigger publishing workflow
+  - Verify packages on npm registry
+  
+  This is the critical step to make packages installable by developers.
+
+successCriteria:
+  - "npm organization @cpms exists and accessible"
+  - "NPM_TOKEN configured in GitHub repository secrets"
+  - "Changeset created for v0.4.0 release"
+  - "All 8 packages published to npm: @cpms/core, data, event, api, agent, semantic, catalog, cli"
+  - "Packages visible on npmjs.com with correct metadata"
+  - "Fresh install works: npm install @cpms/data"
+  - "Zero dependencies verified on published packages"
+  - "Package READMEs visible on npm"
+  - "Release tagged in git (v0.4.0)"
+
+deliverables:
+  - "npm organization @cpms (created or verified)"
+  - "NPM_TOKEN configured as GitHub secret"
+  - "Changeset file (.changeset/*.md)"
+  - "8 packages published on npm registry"
+  - "Git tag v0.4.0"
+  - "GitHub release notes"
+  - "Installation verification report"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Changesets workflow from R4.1 - PR-driven, safe publishing"
+      sourceMission: "R4.1_npm-monorepo-research"
+    - finding: "Publishing setup complete from B4.3"
+      sourceMission: "B4.3_npm-publishing-setup"
+      
+  implementationScope:
+    coreDeliverable: "All 8 packages published and installable from npm"
+    outOfScope:
+      - "npm package analytics or monitoring"
+      - "Deprecation of old versions (first release)"
+      - "Private package management"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Publishing is sequential, straightforward execution"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "npm_org_verified"
+        - "changeset_created"
+        - "packages_published"
+        - "installation_verified"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Publishing correctness and package metadata"
+    - validator: "Gemini"
+      focus: "Security and zero-dependency validation"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "No runtime dependencies in published packages"
+      - "All packages have correct metadata (license, repo, keywords)"
+      - "npm install works from clean environment"
+      - "Package versions consistent"
+
+  failureEscalation:
+    tier_4_human_escalation:
+      enforcement: "npm organization creation requires human npm account - escalate if not accessible"
+
+  qualityGates:
+    preCommit:
+      - "All packages build successfully"
+      - "Zero-dependency constraint verified"
+      - "Package metadata complete"
+      
+    postImplementation:
+      - "All 8 packages visible on npmjs.com"
+      - "Fresh install verified: npm install @cpms/data"
+      - "Package pages show README correctly"
+
+  handoffContext:
+    completed:
+      - "All packages published to npm"
+      - "Developer can npm install @cpms/*"
+    interfaces:
+      - "Packages: @cpms/core, data, event, api, agent, semantic, catalog, cli"
+      - "Version: 0.4.0"
+    assumptions:
+      - "npm account exists or can be created"
+      - "GitHub repo has access to configure secrets"
+    nextMission: "B4.9_deploy-documentation-site"
+    blockers:
+      - "Blocked by B4.3_npm-publishing-setup (setup must be complete)"
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: npm Organization Setup (20 minutes)
+
+### 1.1 Create or Verify npm Organization
+```bash
+# Login to npm
+npm login
+
+# Create organization (if doesn't exist)
+# Visit: https://www.npmjs.com/org/create
+# Organization name: proto
+# Make it public (free)
+```
+
+**If organization exists:** Verify you have publish access
+
+### 1.2 Generate npm Automation Token
+```bash
+# Visit: https://www.npmjs.com/settings/[username]/tokens
+# Create new token:
+#   - Type: Automation
+#   - Scope: Publish
+# Copy token (shows once)
+```
+
+### 1.3 Add NPM_TOKEN to GitHub Secrets
+```bash
+# Visit: https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/settings/secrets/actions
+# Click "New repository secret"
+# Name: NPM_TOKEN
+# Value: [paste token from 1.2]
+```
+
+## Phase 2: Create Changeset (15 minutes)
+
+### 2.1 Run Changeset Add
+```bash
+cd /Users/d/portfolio/CPMS
+
+# Create changeset for all packages
+pnpm changeset add
+```
+
+**When prompted:**
+- Select all 8 packages (core, data, event, api, agent, semantic, catalog, cli)
+- Version bump: patch (0.4.0 → 0.4.0 first release, so actually setting to 0.4.0)
+- Summary: "Initial public release - v0.4.0"
+
+This creates `.changeset/[random-name].md`
+
+### 2.2 Commit Changeset
+```bash
+git add .changeset/*.md
+git commit -m "chore: prepare v0.4.0 release"
+git push origin main
+```
+
+## Phase 3: Publish via GitHub Actions (20 minutes)
+
+### 3.1 Workflow Triggers Automatically
+Pushing to main triggers `.github/workflows/publish-packages.yml`
+
+The workflow will:
+1. Install dependencies
+2. Run tests
+3. Build packages
+4. Detect changeset
+5. Create "Release PR" (if changeset exists)
+
+### 3.2 Review and Merge Release PR
+- GitHub bot creates PR titled "Version Packages"
+- PR contains:
+  - Version bumps in all package.json files
+  - CHANGELOG updates
+- Review PR
+- Merge it
+
+### 3.3 Publishing Happens Automatically
+Merging Release PR triggers workflow again:
+- Detects versions were bumped
+- Publishes all changed packages to npm
+- Creates GitHub release
+
+### 3.4 Monitor Workflow
+```bash
+# Watch Actions tab: https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/actions
+# Verify "Release Packages" workflow succeeds
+```
+
+## Phase 4: Verification (25 minutes)
+
+### 4.1 Check npm Registry
+Visit each package on npmjs.com:
+- https://www.npmjs.com/package/@cpms/core
+- https://www.npmjs.com/package/@cpms/data
+- https://www.npmjs.com/package/@cpms/event
+- https://www.npmjs.com/package/@cpms/api
+- https://www.npmjs.com/package/@cpms/agent
+- https://www.npmjs.com/package/@cpms/semantic
+- https://www.npmjs.com/package/@cpms/catalog
+- https://www.npmjs.com/package/@cpms/cli
+
+Verify:
+- Version shows 0.4.0
+- README displays correctly
+- Dependencies is empty (zero-dep verified)
+- License shows MIT
+- Repository link correct
+
+### 4.2 Test Fresh Install
+```bash
+# Create test directory
+mkdir /tmp/proto-test
+cd /tmp/proto-test
+npm init -y
+
+# Install packages
+npm install @cpms/core
+npm install @cpms/data
+npm install @cpms/cli
+```
+
+Verify all install successfully
+
+### 4.3 Test Imports
+```bash
+# Create test script
+cat > test.js << 'SCRIPT'
+import { hash, jsonCanon } from '@cpms/core';
+import { createDataProtocol } from '@cpms/data';
+
+const protocol = createDataProtocol({
+  dataset: { name: 'test', lifecycle: { status: 'active' } },
+  schema: {
+    fields: {
+      id: { type: 'string', required: true }
+    }
+  }
+});
+
+console.log('Protocol created:', protocol.manifest().dataset.name);
+console.log('Hash works:', hash('test'));
+console.log('✅ All imports working!');
+SCRIPT
+
+node test.js
+```
+
+Should output success message
+
+### 4.4 Test CLI Installation
+```bash
+npm install -g @cpms/cli
+
+# Test CLI works
+proto validate --help
+proto diff --help
+proto query --help
+```
+
+### 4.5 Verify Zero Dependencies
+```bash
+# Check each package on npm
+npm info @cpms/core dependencies
+npm info @cpms/data dependencies
+# etc - all should be empty {}
+```
+
+## Phase 5: Create GitHub Release (15 minutes)
+
+### 5.1 Release Notes
+If not auto-created, create release at:
+https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/releases/new
+
+Tag: v0.4.0
+Title: v0.4.0 - Initial Public Release
+
+Body:
+```markdown
+## 🎉 Initial Public Release
+
+Cross-Protocol Manifest System is now available on npm!
+
+### Install
+
+npm install @cpms/data
+npm install @cpms/cli
+
+### Packages
+
+- @cpms/core - Foundation utilities
+- @cpms/data - Data Protocol v1.1.1
+- @cpms/event - Event Protocol v1.1.1
+- @cpms/api - API Protocol v1.1.1
+- @cpms/agent - Agent Protocol v1.1.1
+- @cpms/semantic - Semantic Protocol v3.2.0
+- @cpms/catalog - Unified catalog system
+- @cpms/cli - Command-line tools
+
+### Features
+
+- Zero external dependencies
+- Immutable protocol instances
+- URN-based cross-protocol linking
+- Manifest validation and diff
+- SDK generation
+- Breaking change detection
+- Performance: 22M+ events/sec, <50ms CLI startup
+
+### Documentation
+
+Clone repo for now - docs site coming soon
+
+### Repository
+
+https://github.com/kneelinghorse/Cross-Protocol-Manifest-System
+```
+
+## Checklist
+
+- [ ] npm organization @cpms created/verified
+- [ ] NPM_TOKEN in GitHub secrets
+- [ ] Changeset created for v0.4.0
+- [ ] Changeset committed and pushed
+- [ ] Release PR created by bot
+- [ ] Release PR reviewed and merged
+- [ ] Packages published automatically
+- [ ] All 8 packages on npmjs.com
+- [ ] Fresh install tested
+- [ ] Imports tested
+- [ ] CLI global install tested
+- [ ] Zero dependencies verified
+- [ ] GitHub release created
+- [ ] Git tag v0.4.0 exists
+

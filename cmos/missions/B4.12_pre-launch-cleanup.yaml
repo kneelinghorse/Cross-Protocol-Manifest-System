@@ -1,0 +1,384 @@
+# Mission: B4.12 Pre-Launch Cleanup & Polish
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.12_pre-launch-cleanup"
+version: "1.0.0"
+
+objective: |
+  Final cleanup pass before v1 public launch.
+  Bug hunt, remove dead code, verify all documentation accurate, ensure repository is professional and polished.
+  Make sure everything works end-to-end: clone → install → use packages → read docs → success.
+
+context: |
+  Sprint 4 nearly complete. Before launch, need final quality pass:
+  - Remove any dead/temporary files
+  - Verify all documentation accurate
+  - Test user journey end-to-end
+  - Fix any obvious bugs
+  - Ensure repository looks professional
+  - Double-check all links work
+  - Verify LICENSE, package metadata correct
+  
+  This is the "don't ship embarrassing bugs" mission.
+  Quick bug hunt and polish pass, not major refactoring.
+
+successCriteria:
+  - "No obvious bugs or broken features"
+  - "All documentation links work"
+  - "Repository clean and professional"
+  - "User journey tested: clone → install → use"
+  - "No dead code or temporary files in main paths"
+  - "Package metadata accurate"
+  - "LICENSE correct (MIT)"
+  - "No embarrassing typos in public-facing docs"
+  - "Examples work"
+  - "CLI works"
+
+deliverables:
+  - "Cleanup checklist completed"
+  - "Bug hunt report (if issues found)"
+  - "User journey validation"
+  - "Final quality assurance sign-off"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "All technical work complete from B4.1-B4.10"
+      sourceMission: "Sprint 4"
+      
+  implementationScope:
+    coreDeliverable: "Polished, professional repository ready for public launch"
+    outOfScope:
+      - "Major refactoring"
+      - "New features"
+      - "Performance optimization"
+      - "Test coverage expansion"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Quality and polish"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "No broken functionality"
+      - "Documentation accurate"
+      - "Professional appearance"
+
+  qualityGates:
+    preCommit:
+      - "All tests passing"
+      - "Build succeeds"
+      - "Examples run"
+      
+    postImplementation:
+      - "User journey works"
+      - "No broken links"
+      - "Repository looks good"
+
+  handoffContext:
+    completed: []
+    interfaces: []
+    assumptions: []
+    nextMission: "v1 Launch"
+    blockers: []
+
+---
+
+# Implementation Plan
+
+## Phase 1: Bug Hunt (30 minutes)
+
+### 1.1 Test All Examples
+```bash
+cd examples
+node 01-data-quality-guardrails.js
+node 02-event-fraud-alerts.js
+node 03-api-contract-snapshot.js
+node 04-agent-delegation-handshake.js
+node 05-semantic-surface-map.js
+node 06-cross-protocol-system-report.js
+```
+Fix any that error
+
+### 1.2 Test CLI Commands
+```bash
+# From root
+node packages/cli/proto.js validate manifests/test-data.json
+node packages/cli/proto.js diff test-manifest-v1.json test-manifest-v2.json
+node packages/cli/proto.js query 'dataset.name:contains:test'
+```
+Fix any errors
+
+### 1.3 Test Package Imports
+```bash
+# Create quick test
+cat > /tmp/test-imports.js << 'EOF'
+import { hash } from './packages/core/dist/index.js';
+import { createDataProtocol } from './packages/data/dist/index.js';
+console.log('✓ Imports work');
+EOF
+
+node /tmp/test-imports.js
+```
+
+### 1.4 Review Recent Commits
+```bash
+git log --oneline -20
+```
+Look for any "WIP", "tmp", "test" commits that need cleanup
+
+## Phase 2: Repository Cleanup (30 minutes)
+
+### 2.1 Remove Dead Files
+Check for and remove:
+- Old protocol files in root (if migrated to packages/)
+- Temporary test files
+- Build artifacts in wrong places
+- .DS_Store files
+
+### 2.2 Check .gitignore
+Ensure ignoring:
+- node_modules
+- *.log
+- .DS_Store
+- .env
+- dist/ (only in certain places)
+
+### 2.3 Organize Root Directory
+Ideal structure:
+```
+/
+├── packages/        ✓ Published packages
+├── internal/        ✓ Shared utilities
+├── docs/            ✓ Documentation site
+├── examples/        ✓ Runnable examples
+├── manifests/       ✓ Test manifests
+├── cmos/            (Internal tooling)
+├── .github/         ✓ Workflows
+├── README.md        ✓ Main docs
+├── LICENSE          ✓ MIT
+└── package.json     ✓ Root workspace
+```
+
+### 2.4 Clean Up Legacy Files
+If old files exist:
+- `data_protocol_v_1_1_1.js` → moved to packages?
+- `proto.js` → moved to packages/cli?
+- Old test files?
+
+Decision: Keep or delete based on backward compat needs
+
+## Phase 3: Documentation Verification (30 minutes)
+
+### 3.1 Test All Links in README
+```bash
+# Check each link manually or use tool
+```
+
+Verify:
+- npm package links work
+- Documentation site URL works
+- GitHub repo link works
+- License link works
+
+### 3.2 Check Package READMEs
+For each package in packages/:
+- Installation command correct
+- Example code works
+- Docs link correct
+
+### 3.3 Verify Documentation Site
+If deployed:
+- Visit site
+- Test navigation
+- Check all pages load
+- Verify playground works
+- Test search (if configured)
+
+If not deployed yet:
+- Build locally: `cd docs && pnpm build`
+- Serve: `pnpm serve`
+- Test locally
+
+### 3.4 Check LICENSE
+```bash
+cat LICENSE
+```
+Verify:
+- MIT License text present
+- Year correct (2025)
+- Attribution correct
+
+## Phase 4: User Journey Test (30 minutes)
+
+### 4.1 Simulate New Developer
+```bash
+# Create clean test environment
+mkdir /tmp/cpms-test
+cd /tmp/cpms-test
+
+# Clone repo
+git clone https://github.com/kneelinghorse/Cross-Protocol-Manifest-System.git
+cd Cross-Protocol-Manifest-System
+
+# Follow README instructions
+pnpm install
+pnpm test
+pnpm build
+```
+
+Should complete without errors
+
+### 4.2 Test npm Package Install (if published)
+```bash
+mkdir /tmp/npm-test
+cd /tmp/npm-test
+npm init -y
+
+npm install @cpms/data
+node -e "import('@cpms/data').then(m => console.log('✓ Works'))"
+```
+
+### 4.3 Test Examples
+```bash
+node examples/01-data-quality-guardrails.js
+```
+Should run without errors
+
+### 4.4 Document Issues
+If any issues found:
+- Document in checklist
+- Fix immediately or create follow-up task
+
+## Phase 5: CI Verification (20 minutes)
+
+### 5.1 Check Latest CI Run
+Visit: https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/actions
+
+Review:
+- Latest workflow run
+- Which jobs failed
+- Error messages
+
+### 5.2 Fix Workflow Issues
+Common issues:
+- pnpm version
+- Node.js version
+- Scope references
+- Missing secrets
+
+### 5.3 Trigger Clean Build
+```bash
+# Make small change
+echo "# CI test" >> README.md
+
+git add README.md
+git commit -m "test: verify CI passing"
+git push origin main
+
+# Watch Actions tab
+```
+
+### 5.4 Verify Green Build
+CI should:
+- Install dependencies
+- Build packages
+- Run tests
+- Pass all checks
+
+## Phase 6: Final Polish (15 minutes)
+
+### 6.1 Repository Settings
+Check GitHub repo settings:
+- Description: Clear one-liner
+- Website: Link to docs (if deployed)
+- Topics: manifest, protocol, validation, schema, gitops
+- About section complete
+
+### 6.2 Check Repository Appearance
+View repo as anonymous user:
+- README displays well
+- Code organized
+- Professional appearance
+
+### 6.3 Verify Package Metadata
+For each package.json:
+- name: @cpms/[name]
+- version: 0.4.0 (or latest)
+- description: Present
+- license: MIT
+- repository: Correct GitHub URL
+- keywords: Relevant
+
+### 6.4 Final Commit
+```bash
+git status
+# Commit any cleanup changes
+git add .
+git commit -m "chore: final polish for v1 launch"
+git push origin main
+```
+
+## Checklist
+
+### Tests
+- [ ] validate-action rebuilt
+- [ ] validate-action test passes
+- [ ] All 100 tests passing
+- [ ] pnpm test exits 0
+- [ ] Tests stable (run 3x)
+
+### Build
+- [ ] pnpm build succeeds
+- [ ] All packages have dist/
+- [ ] No build warnings
+
+### CI
+- [ ] GitHub Actions passing
+- [ ] All workflow jobs green
+- [ ] No failed emails
+
+### Repository
+- [ ] Dead files removed
+- [ ] .gitignore correct
+- [ ] Directory structure clean
+- [ ] LICENSE present
+
+### Documentation
+- [ ] README links work
+- [ ] Package READMEs accurate
+- [ ] Docs site works (if deployed)
+- [ ] No broken links
+
+### User Journey
+- [ ] Clone works
+- [ ] Install works
+- [ ] Build works
+- [ ] Tests pass
+- [ ] Examples run
+- [ ] CLI works
+- [ ] Package install works (if published)
+
+### Metadata
+- [ ] Package versions consistent
+- [ ] Scope consistent (@cpms)
+- [ ] License correct (MIT)
+- [ ] Keywords present
+- [ ] Repository URLs correct
+
+### Polish
+- [ ] No typos in public docs
+- [ ] Professional appearance
+- [ ] GitHub settings configured
+- [ ] Ready for public viewing
+

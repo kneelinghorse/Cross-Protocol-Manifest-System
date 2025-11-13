@@ -137,7 +137,7 @@ domainFields:
     nextMission: "B4.6_example-repository"
     blockers:
       - "Blocked by R4.3_github-action-requirements (must complete first)"
-      - "Blocked by B4.3_npm-publishing-setup (needs @proto/cli published)"
+      - "Blocked by B4.3_npm-publishing-setup (needs @cpms/cli published)"
     researchRequired: false
 
 ---

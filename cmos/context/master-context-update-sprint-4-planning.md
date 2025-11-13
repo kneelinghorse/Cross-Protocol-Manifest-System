@@ -20,7 +20,7 @@ Sprint 4 has been **fully planned, researched, and configured** for autonomous a
 - **Finding:** Best-of-breed stack (pnpm + Turborepo + tsup + Changesets)
 - **Key Innovation:** Zero-dependency via internal devDependencies with build-time inlining
 - **Document:** `cmos/research/R4.1- npm Monorepo Tooling and Zero-Dependency Architecture.md`
-- **Critical Decision:** Use tsup to inline `@proto/utils` code at build time, resulting in published packages with zero runtime dependencies
+- **Critical Decision:** Use tsup to inline `@cpms/utils` code at build time, resulting in published packages with zero runtime dependencies
 
 ✅ **R4.2: Documentation Site & Live Playground Research**
 - **Status:** Complete

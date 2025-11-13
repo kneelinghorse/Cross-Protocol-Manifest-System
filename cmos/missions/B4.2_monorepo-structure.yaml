@@ -5,7 +5,7 @@ missionId: "B4.2_monorepo-structure"
 version: "1.0.0"
 
 objective: |
-  Refactor project from monolithic structure to npm monorepo with independent packages (@proto/*).
+  Refactor project from monolithic structure to npm monorepo with independent packages (@cpms/*).
   Implement recommended tooling from R4.1 research findings and create clean package separation while maintaining zero-dependency philosophy.
   Enable modular installation and independent versioning for protocol packages.
 
@@ -16,14 +16,14 @@ context: |
   Target structure:
   ```
   packages/
-    ├── core/          # @proto/core (utils.js foundation)
-    ├── data/          # @proto/data
-    ├── event/         # @proto/event
-    ├── api/           # @proto/api
-    ├── agent/         # @proto/agent
-    ├── semantic/      # @proto/semantic
-    ├── catalog/       # @proto/catalog
-    └── cli/           # @proto/cli (proto.js)
+    ├── core/          # @cpms/core (utils.js foundation)
+    ├── data/          # @cpms/data
+    ├── event/         # @cpms/event
+    ├── api/           # @cpms/api
+    ├── agent/         # @cpms/agent
+    ├── semantic/      # @cpms/semantic
+    ├── catalog/       # @cpms/catalog
+    └── cli/           # @cpms/cli (proto.js)
   ```
   
   This mission depends on R4.1 research findings for tooling choice and implementation approach.
@@ -150,14 +150,14 @@ domainFields:
       - "Tests migrated and passing"
       - "Build pipeline operational"
     interfaces:
-      - "Package: @proto/core exports foundation utilities"
-      - "Package: @proto/data exports createDataProtocol, createDataCatalog"
-      - "Package: @proto/event exports createEventProtocol, createEventCatalog"
-      - "Package: @proto/api exports createAPIProtocol, createAPICatalog"
-      - "Package: @proto/agent exports createAgentProtocol, createAgentCatalog"
-      - "Package: @proto/semantic exports SemanticProtocolV32"
-      - "Package: @proto/catalog exports unified catalog system"
-      - "Package: @proto/cli exports proto CLI tool"
+      - "Package: @cpms/core exports foundation utilities"
+      - "Package: @cpms/data exports createDataProtocol, createDataCatalog"
+      - "Package: @cpms/event exports createEventProtocol, createEventCatalog"
+      - "Package: @cpms/api exports createAPIProtocol, createAPICatalog"
+      - "Package: @cpms/agent exports createAgentProtocol, createAgentCatalog"
+      - "Package: @cpms/semantic exports SemanticProtocolV32"
+      - "Package: @cpms/catalog exports unified catalog system"
+      - "Package: @cpms/cli exports proto CLI tool"
     assumptions:
       - "R4.1 research provides clear tooling recommendation"
       - "Node.js 20+ supports chosen workspace solution"
@@ -192,7 +192,7 @@ Create `package.json` in root with workspace configuration.
 Template for each package:
 ```json
 {
-  "name": "@proto/[name]",
+  "name": "@cpms/[name]",
   "version": "0.4.0",
   "description": "[Protocol description]",
   "main": "index.js",
@@ -224,7 +224,7 @@ Template for each package:
 
 ## Phase 2: Code Migration (90 minutes)
 
-### 2.1 Migrate @proto/core
+### 2.1 Migrate @cpms/core
 ```bash
 # Copy foundation utilities
 cp utils.js packages/core/
@@ -237,7 +237,7 @@ Create `packages/core/index.js`:
 export * from './utils.js';
 ```
 
-### 2.2 Migrate @proto/data
+### 2.2 Migrate @cpms/data
 ```bash
 cp data_protocol_v_1_1_1.js packages/data/data-protocol.js
 cp data-protocol.test.js packages/data/
@@ -248,27 +248,27 @@ Create `packages/data/index.js`:
 export { createDataProtocol, createDataCatalog } from './data-protocol.js';
 ```
 
-Update imports to use `@proto/core`:
+Update imports to use `@cpms/core`:
 ```javascript
-import { hash, dget, /* ... */ } from '@proto/core';
+import { hash, dget, /* ... */ } from '@cpms/core';
 ```
 
-### 2.3 Migrate @proto/event
+### 2.3 Migrate @cpms/event
 Similar pattern to data package
 
-### 2.4 Migrate @proto/api
+### 2.4 Migrate @cpms/api
 Similar pattern to data package
 
-### 2.5 Migrate @proto/agent
+### 2.5 Migrate @cpms/agent
 Similar pattern to data package
 
-### 2.6 Migrate @proto/semantic
+### 2.6 Migrate @cpms/semantic
 Similar pattern to data package
 
-### 2.7 Migrate @proto/catalog
+### 2.7 Migrate @cpms/catalog
 Extract catalog system to dedicated package
 
-### 2.8 Migrate @proto/cli
+### 2.8 Migrate @cpms/cli
 ```bash
 cp proto.js packages/cli/
 cp proto.test.js packages/cli/
@@ -293,8 +293,8 @@ Create `packages/cli/package.json` with `bin` field:
 Based on R4.1 recommendation, implement ONE of:
 
 **Option A: Internal Dependency**
-- Protocols depend on `@proto/core`
-- Add to package.json: `"dependencies": { "@proto/core": "workspace:*" }`
+- Protocols depend on `@cpms/core`
+- Add to package.json: `"dependencies": { "@cpms/core": "workspace:*" }`
 - Violates zero-dependency for end users (acceptable if core is minimal)
 
 **Option B: Copy utils.js**
@@ -331,7 +331,7 @@ rm -rf node_modules packages/*/node_modules
 npm install
 
 # Verify all packages linked correctly
-ls -la node_modules/@proto/
+ls -la node_modules/@cpms/
 ```
 
 ### 4.4 Test CLI Installation
@@ -375,14 +375,14 @@ For each protocol package:
 ```bash
 cd packages/data
 cat package.json | jq .dependencies
-# Should be empty or only include @proto/core (if Option A)
+# Should be empty or only include @cpms/core (if Option A)
 ```
 
 ### 6.2 Import Resolution Check
 Create test script that imports from each package:
 ```javascript
-import { createDataProtocol } from '@proto/data';
-import { createEventProtocol } from '@proto/event';
+import { createDataProtocol } from '@cpms/data';
+import { createEventProtocol } from '@cpms/event';
 // ... test all imports work
 ```
 

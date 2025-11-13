@@ -4,7 +4,7 @@ title: Event Protocol Reference
 description: Document event-stream manifests that power Kafka, Kinesis, or webhooks.
 ---
 
-`@proto/event` mirrors the Data Protocol but focuses on streaming semantics—topics, partitions, retention, and delivery guarantees.
+`@cpms/event` mirrors the Data Protocol but focuses on streaming semantics—topics, partitions, retention, and delivery guarantees.
 
 ## Manifest Highlights
 
@@ -17,7 +17,7 @@ description: Document event-stream manifests that power Kafka, Kinesis, or webho
 ## API Surface
 
 ```ts
-import { createEventProtocol } from '@proto/event';
+import { createEventProtocol } from '@cpms/event';
 
 const protocol = createEventProtocol(manifest);
 protocol.validate();

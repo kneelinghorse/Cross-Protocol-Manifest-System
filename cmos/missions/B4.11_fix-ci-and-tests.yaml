@@ -1,0 +1,255 @@
+# Mission: B4.11 Fix CI and Test Failures
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.11_fix-ci-and-tests"
+version: "1.0.0"
+
+objective: |
+  Fix all test failures and get GitHub Actions CI passing.
+  Resolve validate-action test failure, fix any scope inconsistencies, ensure 100/100 tests pass.
+  Stop the failed CI email notifications by getting builds green.
+
+context: |
+  Current state:
+  - Tests: 99/100 passing (validate-action fails)
+  - Build: Works (pnpm build succeeds)
+  - CI: Failing (GitHub Actions sending error emails)
+  - Scope: Migrated to @cpms but some @proto references may remain
+  
+  validate-action test error:
+  "Cannot find module /packages/validate-action/dist/index.js"
+  
+  This blocks B4.10 (README polish) and prevents clean v1 release.
+  
+  Need to:
+  - Fix validate-action build/test issue
+  - Verify all 100 tests pass
+  - Get CI green
+  - Resolve any scope inconsistencies
+
+successCriteria:
+  - "All 100 tests passing (100% pass rate)"
+  - "pnpm test exits with code 0"
+  - "validate-action test works"
+  - "GitHub Actions CI passing (green builds)"
+  - "No more failed CI emails"
+  - "All scope references consistent (@cpms)"
+  - "pnpm build && pnpm test succeeds"
+
+deliverables:
+  - "Fixed validate-action package"
+  - "All tests passing"
+  - "Green CI builds"
+  - "Test failure analysis document"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "validate-action dist/index.js missing or not properly built"
+      sourceMission: "Test output analysis"
+    - finding: "Packages renamed to @cpms scope"
+      sourceMission: "B4.8_npm-package-publish"
+      
+  implementationScope:
+    coreDeliverable: "100% tests passing, CI green"
+    outOfScope:
+      - "New test coverage (maintain current)"
+      - "Performance optimization"
+      - "Refactoring existing tests"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Test correctness and CI configuration"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "All tests pass consistently"
+      - "CI builds succeed"
+      - "No workarounds or skipped tests"
+
+  qualityGates:
+    preCommit:
+      - "pnpm test exits 0"
+      - "pnpm build succeeds"
+      
+    postImplementation:
+      - "GitHub Actions CI passing"
+      - "Run tests 3x to verify stability"
+
+  handoffContext:
+    completed: []
+    interfaces: []
+    assumptions:
+      - "validate-action just needs rebuild"
+      - "Scope issues are minor"
+    nextMission: "B4.10_readme-final-polish"
+    blockers: []
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: Fix validate-action (30 minutes)
+
+### 1.1 Rebuild validate-action
+```bash
+cd packages/validate-action
+
+# Clean and rebuild
+rm -rf dist
+pnpm build
+
+# Verify dist/index.js exists
+ls -la dist/index.js
+
+# Run tests
+pnpm test
+```
+
+### 1.2 If Still Fails
+Check tsup.config.ts:
+- Entry point correct?
+- Output directory correct?
+
+Check package.json:
+- "main" points to dist/index.js?
+- Build script runs tsup?
+
+### 1.3 Verify Fix
+```bash
+# From root
+pnpm test
+
+# Should see 100/100 passing
+```
+
+## Phase 2: Check Scope Consistency (20 minutes)
+
+### 2.1 Search for @proto References
+```bash
+# Search for any remaining @proto references
+grep -r "@proto" packages/ --include="*.json" --include="*.ts" --include="*.js"
+
+# Should only find @proto in:
+# - validate-action (it's about validating proto manifests)
+# - Historical comments
+```
+
+### 2.2 Fix Any Found
+Replace @proto with @cpms where appropriate:
+- package.json dependencies
+- import statements
+- Documentation
+
+### 2.3 Rebuild Everything
+```bash
+pnpm install
+pnpm build
+pnpm test
+```
+
+## Phase 3: Fix CI (30 minutes)
+
+### 3.1 Check Workflow Files
+Review .github/workflows/ files for:
+- Scope references
+- Build commands
+- Test commands
+
+### 3.2 Test CI Locally (if possible)
+```bash
+# Install act (if available)
+act pull_request
+
+# Or just push to branch and watch CI
+```
+
+### 3.3 Fix Manifest Validation Workflow
+Check `.github/workflows/manifest-validation.yml`:
+- Uses local validate-action
+- Scope references correct
+- Commands work with @cpms
+
+### 3.4 Push and Verify
+```bash
+git add .
+git commit -m "fix: resolve validate-action tests and scope consistency"
+git push origin main
+
+# Watch GitHub Actions
+# Verify build passes
+```
+
+## Phase 4: Validation (15 minutes)
+
+### 4.1 Run Full Test Suite
+```bash
+pnpm test
+```
+Expect: 100/100 passing
+
+### 4.2 Run Build
+```bash
+pnpm build
+```
+Expect: All packages build successfully
+
+### 4.3 Check CI Status
+- Visit GitHub Actions tab
+- Verify latest run is green
+- Check all jobs passed
+
+### 4.4 Test Package Installation
+```bash
+# If packages published
+npm install @cpms/core
+# Should work
+```
+
+## Troubleshooting
+
+### validate-action dist/index.js missing
+```bash
+cd packages/validate-action
+pnpm build
+# Verify dist/ created
+```
+
+### Scope mismatch errors
+- Update all package.json to @cpms
+- Update import statements
+- Rebuild all
+
+### CI still failing
+- Check workflow YAML syntax
+- Verify pnpm version in CI
+- Check Node.js version (20+)
+
+## Checklist
+
+- [ ] validate-action rebuilt
+- [ ] dist/index.js exists
+- [ ] validate-action tests pass
+- [ ] All 100 tests passing
+- [ ] pnpm test exits 0
+- [ ] Scope consistency verified
+- [ ] No @proto references (except in comments/docs)
+- [ ] pnpm build succeeds
+- [ ] CI workflow passing
+- [ ] No failed email notifications
+- [ ] All packages installable
+

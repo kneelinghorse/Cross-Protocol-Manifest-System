@@ -12,7 +12,7 @@ export default defineConfig({
   treeshake: true,
   splitting: false,
   shims: false,
-  noExternal: [/^@actions\//, '@proto/data'],
+  noExternal: [/^@actions\//, '@cpms/data'],
   env: {
     NODE_ENV: 'production'
   }

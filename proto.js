@@ -11,17 +11,69 @@ import path from 'path';
 
 // Import protocol implementations (prefer workspace package, fall back to local zero-dep file)
 import { createDataProtocol as localCreateDataProtocol } from './data_protocol_v_1_1_1.js';
+import { createAgentProtocol as localCreateAgentProtocol } from './agent_protocol_v_1_1_1.js';
+import { createApiProtocol as localCreateApiProtocol } from './api_protocol_v_1_1_1.js';
+import { createEventProtocol as localCreateEventProtocol } from './event_protocol_v_1_1_1.js';
+import { createSemanticProtocol as localCreateSemanticProtocol } from './Semantic Protocol — v3.2.0.js';
 
 let createDataProtocol = localCreateDataProtocol;
+let createAgentProtocol = localCreateAgentProtocol;
+let createApiProtocol = localCreateApiProtocol;
+let createEventProtocol = localCreateEventProtocol;
+let createSemanticProtocol = localCreateSemanticProtocol;
 
 try {
-  const dataProtocolModule = await import('@proto/data');
+  const dataProtocolModule = await import('@cpms/data');
   if (dataProtocolModule?.createDataProtocol) {
     createDataProtocol = dataProtocolModule.createDataProtocol;
   }
 } catch (error) {
   if (process?.env?.PROTO_DEBUG === '1') {
     console.warn('[proto-cli] fallback to local data protocol implementation:', error.message);
+  }
+}
+
+try {
+  const agentProtocolModule = await import('@cpms/agent');
+  if (agentProtocolModule?.createAgentProtocol) {
+    createAgentProtocol = agentProtocolModule.createAgentProtocol;
+  }
+} catch (error) {
+  if (process?.env?.PROTO_DEBUG === '1') {
+    console.warn('[proto-cli] fallback to local agent protocol implementation:', error.message);
+  }
+}
+
+try {
+  const apiProtocolModule = await import('@cpms/api');
+  if (apiProtocolModule?.createApiProtocol) {
+    createApiProtocol = apiProtocolModule.createApiProtocol;
+  }
+} catch (error) {
+  if (process?.env?.PROTO_DEBUG === '1') {
+    console.warn('[proto-cli] fallback to local api protocol implementation:', error.message);
+  }
+}
+
+try {
+  const eventProtocolModule = await import('@cpms/event');
+  if (eventProtocolModule?.createEventProtocol) {
+    createEventProtocol = eventProtocolModule.createEventProtocol;
+  }
+} catch (error) {
+  if (process?.env?.PROTO_DEBUG === '1') {
+    console.warn('[proto-cli] fallback to local event protocol implementation:', error.message);
+  }
+}
+
+try {
+  const semanticProtocolModule = await import('@cpms/semantic');
+  if (semanticProtocolModule?.createSemanticProtocol) {
+    createSemanticProtocol = semanticProtocolModule.createSemanticProtocol;
+  }
+} catch (error) {
+  if (process?.env?.PROTO_DEBUG === '1') {
+    console.warn('[proto-cli] fallback to local semantic protocol implementation:', error.message);
   }
 }
 
@@ -97,6 +149,25 @@ function loadManifest(filePath) {
   } catch (error) {
     throw new Error(`Invalid JSON in manifest file: ${error.message}`);
   }
+}
+
+/**
+ * Normalize manifest shape before validation
+ * @param {Object} manifest - Raw manifest object
+ * @returns {Object} Prepared manifest
+ */
+function prepareManifestForValidation(manifest) {
+  const copy = JSON.parse(JSON.stringify(manifest));
+  const type = (copy.type || '').toLowerCase();
+  
+  if (type === 'agent') {
+    copy.agent = copy.agent || {};
+    copy.agent.id = copy.agent.id || copy.id || copy.urn || copy.name || 'agent';
+    copy.agent.name = copy.agent.name || copy.name || copy.agent.id;
+    copy.agent.version = copy.agent.version || copy.version;
+  }
+  
+  return copy;
 }
 
 /**
@@ -321,8 +392,26 @@ async function handleValidate(parsed) {
   }
   
   try {
-    const manifest = loadManifest(options.manifest);
-    const protocol = createDataProtocol(manifest);
+    const manifest = prepareManifestForValidation(loadManifest(options.manifest));
+    let type = (manifest.type || '').toLowerCase();
+    if (!type && manifest.schema) type = 'data';
+    if (!type && manifest.element?.type) type = manifest.element.type.toLowerCase();
+    
+    const factories = {
+      data: createDataProtocol,
+      agent: createAgentProtocol,
+      api: createApiProtocol,
+      event: createEventProtocol,
+      semantic: createSemanticProtocol
+    };
+    
+    const factory = factories[type] || createDataProtocol;
+    const protocol = factory(manifest);
+    
+    if (typeof protocol.validate !== 'function') {
+      console.log('No validator available for this manifest type - assuming valid');
+      return 0;
+    }
     const protocolResult = await protocol.validate();
     
     // Convert protocol result format to CLI format

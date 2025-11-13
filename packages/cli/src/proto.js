@@ -15,7 +15,7 @@ import { createDataProtocol as localCreateDataProtocol } from './data_protocol_v
 let createDataProtocol = localCreateDataProtocol;
 
 try {
-  const dataProtocolModule = await import('@proto/data');
+  const dataProtocolModule = await import('@cpms/data');
   if (dataProtocolModule?.createDataProtocol) {
     createDataProtocol = dataProtocolModule.createDataProtocol;
   }

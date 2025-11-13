@@ -4,7 +4,7 @@ displayName: CMOS Backlog Export
 description: Backlog export generated from the CMOS SQLite database.
 author: CMOS
 schema: ./schemas/SprintPlan.v1.json
-generatedAt: '2025-11-11T22:20:11.388332+00:00'
+generatedAt: '2025-11-13T17:26:08.720203+00:00'
 ---
 domainFields:
   type: Planning.SprintPlan.v1
@@ -274,9 +274,30 @@ domainFields:
     missions:
     - id: B4.10_readme-final-polish
       name: 'B4.10: README Final Polish & v1 Readiness'
-      status: Current
+      status: Blocked
+      notes: Build tooling (turbo + packages) still emit @proto workspace names causing
+        cancellation; needs upstream workspace refactor
       metadata:
         description: Update README with npm install, docs URL, final polish for v1
+        started_at: '2025-11-12T15:29:25Z'
+        completed_at: '2025-11-12T21:08:10Z'
+        blocked_at: '2025-11-12T21:53:04Z'
+        blocked_reason: Build tooling (turbo + packages) still emit @proto workspace
+          names causing cancellation; needs upstream workspace refactor
+        blocked_needs:
+        - Workspace scope rename to @cpms or alias turbo config
+        - Re-run build pipeline after repo cleanup
+    - id: B4.11_fix-ci-and-tests
+      name: 'B4.11: Fix CI and Test Failures'
+      status: Queued
+      metadata:
+        description: Fix validate-action test, get all 100 tests passing, green CI
+          builds
+    - id: B4.12_pre-launch-cleanup
+      name: 'B4.12: Pre-Launch Cleanup & Polish'
+      status: Queued
+      metadata:
+        description: Final bug hunt, cleanup, user journey validation before v1 launch
     - id: B4.1_test-stabilization
       name: 'B4.1: Test Stabilization'
       status: Completed
@@ -424,9 +445,22 @@ domainFields:
         completed_at: '2025-11-11T21:05:42Z'
     - id: B4.9_deploy-documentation-site
       name: 'B4.9: Deploy Documentation Site'
-      status: Current
+      status: Completed
+      completed_at: '2025-11-12T15:00:09Z'
+      notes: 'Created .github/workflows/deploy-docs.yml to install, build, and publish
+        the docs package to the cpms-docs Pages project (main auto-deploys, previews
+        follow branches).
+
+        Documented install/build/deploy steps in README.md, docs/README.md, and release
+        notes; highlighted required CLOUDFLARE_API_TOKEN + ACCOUNT_ID secrets and
+        default https://cpms-docs.pages.dev domain.
+
+        Validated the workspace with pnpm build plus pnpm --filter docs build to confirm
+        the static site output before shipping.'
       metadata:
         description: Deploy Docusaurus site to Cloudflare Pages or alternative
+        started_at: '2025-11-12T14:53:37Z'
+        completed_at: '2025-11-12T15:00:09Z'
     - id: R4.1_npm-monorepo-research
       name: 'R4.1: npm Monorepo Tooling Research'
       status: Completed
@@ -504,10 +538,19 @@ domainFields:
     to: B3.6_cli-query-graph
     type: requires
   - from: B4.10_readme-final-polish
+    to: B4.11_fix-ci-and-tests
+    type: blocks
+  - from: B4.10_readme-final-polish
     to: B4.8_npm-package-publish
     type: blocks
   - from: B4.10_readme-final-polish
     to: B4.9_deploy-documentation-site
+    type: blocks
+  - from: B4.12_pre-launch-cleanup
+    to: B4.10_readme-final-polish
+    type: blocks
+  - from: B4.12_pre-launch-cleanup
+    to: B4.11_fix-ci-and-tests
     type: blocks
   - from: B4.2_monorepo-structure
     to: B4.1_test-stabilization

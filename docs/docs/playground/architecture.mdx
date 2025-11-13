@@ -19,7 +19,7 @@ flowchart LR
 
 - **Editor** – Monaco runs inside React with a custom JSON schema, IntelliSense, and keyboard shortcuts.
 - **Worker** – A dedicated worker keeps the UI responsive, pulls in protocol packages, and normalizes errors.
-- **Protocol Modules** – The same `@proto/*` packages used by the CLI, bundled for the browser.
+- **Protocol Modules** – The same `@cpms/*` packages used by the CLI, bundled for the browser.
 - **WASM Hook (Future)** – Validation logic can be swapped with WASM modules for additional sandboxing; the worker uses an async contract to prepare future upgrades.
 
 ## Lazy Loading Strategy
@@ -59,7 +59,7 @@ The UI shows both Monaco squiggles and a tabular summary with severity filters a
 
 ## Extensibility Hooks
 
-- **Custom Validators** – Register additional validators in `@proto/data` and they automatically appear in the playground results.
+- **Custom Validators** – Register additional validators in `@cpms/data` and they automatically appear in the playground results.
 - **Protocol Switcher** – The worker chooses the factory (`createDataProtocol`, `createApiProtocol`, etc.) based on a dropdown in the UI.
 - **Export** – Users can download the manifest JSON along with validation results for offline auditing (coming soon).
 

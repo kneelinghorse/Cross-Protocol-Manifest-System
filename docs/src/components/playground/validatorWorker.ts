@@ -3,11 +3,11 @@ import jsonSourceMap from 'json-source-map';
 import type {PointerInfo} from 'json-source-map';
 
 const {parse: parseWithPointers} = jsonSourceMap;
-import {createDataProtocol} from '@proto/data';
-import {createEventProtocol} from '@proto/event';
-import {createApiProtocol} from '@proto/api';
-import {createAgentProtocol} from '@proto/agent';
-import {createSemanticProtocol} from '@proto/semantic';
+import {createDataProtocol} from '@cpms/data';
+import {createEventProtocol} from '@cpms/event';
+import {createApiProtocol} from '@cpms/api';
+import {createAgentProtocol} from '@cpms/agent';
+import {createSemanticProtocol} from '@cpms/semantic';
 import type {ProtocolId} from './sampleManifests';
 import type {
   MarkerPayload,

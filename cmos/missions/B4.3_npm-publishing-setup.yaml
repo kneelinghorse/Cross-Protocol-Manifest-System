@@ -5,7 +5,7 @@ missionId: "B4.3_npm-publishing-setup"
 version: "1.0.0"
 
 objective: |
-  Configure npm publishing workflow for @proto/* packages with automated CI/CD pipeline using GitHub Actions.
+  Configure npm publishing workflow for @cpms/* packages with automated CI/CD pipeline using GitHub Actions.
   Setup package versioning, release automation, and publish to npm registry.
   Ensure packages are discoverable and properly tagged on npm.
 
@@ -16,22 +16,22 @@ context: |
   - Setup version management (independent or unified)
   - Configure package publishing automation
   - Add release notes generation
-  - Setup npm organization (@proto scope)
+  - Setup npm organization (@cpms scope)
   
   Packages to publish:
-  - @proto/core
-  - @proto/data
-  - @proto/event
-  - @proto/api
-  - @proto/agent
-  - @proto/semantic
-  - @proto/catalog
-  - @proto/cli
+  - @cpms/core
+  - @cpms/data
+  - @cpms/event
+  - @cpms/api
+  - @cpms/agent
+  - @cpms/semantic
+  - @cpms/catalog
+  - @cpms/cli
   
-  This enables developers to `npm install @proto/data` for immediate use.
+  This enables developers to `npm install @cpms/data` for immediate use.
 
 successCriteria:
-  - "npm organization @proto created and configured"
+  - "npm organization @cpms created and configured"
   - "GitHub Actions workflow for publishing operational"
   - "All 8 packages successfully published to npm"
   - "Package metadata complete (README, license, keywords)"
@@ -119,7 +119,7 @@ domainFields:
       - "Security audit passes"
       
     postImplementation:
-      - "Test install from npm: npm install @proto/core"
+      - "Test install from npm: npm install @cpms/core"
       - "Verify all 8 packages visible on npmjs.com"
       - "Check package pages have README"
       - "Verify LICENSE in packages"
@@ -149,7 +149,7 @@ domainFields:
 ## Phase 1: npm Organization Setup (30 minutes)
 
 ### 1.1 Create npm Organization
-- Register @proto organization on npmjs.com
+- Register @cpms organization on npmjs.com
 - Configure organization settings
 - Add team members (if any)
 - Set up 2FA
@@ -171,7 +171,7 @@ NPM_TOKEN=<automation-token>
 Each package needs:
 ```json
 {
-  "name": "@proto/[name]",
+  "name": "@cpms/[name]",
   "version": "0.4.0",
   "description": "...",
   "keywords": ["manifest", "protocol", "validation", "..."],
@@ -194,13 +194,13 @@ Each package needs:
 ### 2.2 Create Package READMEs
 Minimum README template:
 ```markdown
-# @proto/[name]
+# @cpms/[name]
 
 [Description]
 
 ## Installation
 
-npm install @proto/[name]
+npm install @cpms/[name]
 
 ## Quick Start
 
@@ -313,8 +313,8 @@ git push origin v0.4.0
 
 ### 4.4 Verify Published Packages
 ```bash
-npm view @proto/core
-npm view @proto/data
+npm view @cpms/core
+npm view @cpms/data
 # ... check all 8 packages
 ```
 
@@ -325,16 +325,16 @@ npm view @proto/data
 mkdir /tmp/proto-test
 cd /tmp/proto-test
 npm init -y
-npm install @proto/core
-npm install @proto/data
-npm install @proto/cli
+npm install @cpms/core
+npm install @cpms/data
+npm install @cpms/cli
 ```
 
 ### 5.2 Test Import and Usage
 ```javascript
 // test.js
-import { createDataProtocol } from '@proto/data';
-import { hash } from '@proto/core';
+import { createDataProtocol } from '@cpms/data';
+import { hash } from '@cpms/core';
 
 const protocol = createDataProtocol({
   dataset: { name: 'test' },
@@ -348,7 +348,7 @@ Run: `node test.js`
 
 ### 5.3 Test CLI Installation
 ```bash
-npm install -g @proto/cli
+npm install -g @cpms/cli
 proto validate --help
 ```
 
@@ -361,18 +361,18 @@ Create GitHub Release with notes:
 
 ## New Packages Published
 
-- @proto/core - Foundation utilities
-- @proto/data - Data Protocol v1.1.1
-- @proto/event - Event Protocol v1.1.1
-- @proto/api - API Protocol v1.1.1
-- @proto/agent - Agent Protocol v1.1.1
-- @proto/semantic - Semantic Protocol v3.2.0
-- @proto/catalog - Unified catalog system
-- @proto/cli - Command-line tools
+- @cpms/core - Foundation utilities
+- @cpms/data - Data Protocol v1.1.1
+- @cpms/event - Event Protocol v1.1.1
+- @cpms/api - API Protocol v1.1.1
+- @cpms/agent - Agent Protocol v1.1.1
+- @cpms/semantic - Semantic Protocol v3.2.0
+- @cpms/catalog - Unified catalog system
+- @cpms/cli - Command-line tools
 
 ## Installation
 
-npm install @proto/data
+npm install @cpms/data
 
 ## Highlights
 
@@ -393,7 +393,7 @@ Built with CMOS mission-driven development.
 ### 6.2 Update Project README
 Update root README with npm badges:
 ```markdown
-[![npm version](https://badge.fury.io/js/%40proto%2Fcore.svg)](https://www.npmjs.com/package/@proto/core)
+[![npm version](https://badge.fury.io/js/%40cpms%2Fcore.svg)](https://www.npmjs.com/package/@cpms/core)
 ```
 
 ## Rollback Plan
@@ -401,7 +401,7 @@ Update root README with npm badges:
 If publish fails:
 ```bash
 # Unpublish within 24 hours (if needed)
-npm unpublish @proto/core@0.4.0 --force
+npm unpublish @cpms/core@0.4.0 --force
 
 # Fix issues
 # Re-tag with patch version
@@ -411,7 +411,7 @@ git push origin v0.4.1
 
 ## Checklist
 
-- [ ] npm organization @proto created
+- [ ] npm organization @cpms created
 - [ ] npm token generated and stored in GitHub secrets
 - [ ] All packages have complete metadata
 - [ ] All packages have READMEs

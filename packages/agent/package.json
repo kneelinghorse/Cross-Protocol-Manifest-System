@@ -1,5 +1,5 @@
 {
-  "name": "@proto/agent",
+  "name": "@cpms/agent",
   "version": "0.4.0",
   "private": false,
   "description": "Agent Protocol v1.1.1 for capability manifests and delegation chains",

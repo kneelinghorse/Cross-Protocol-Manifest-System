@@ -3,7 +3,7 @@
 import { loadModule } from './support/load-module.js';
 
 const { createApiProtocol } = await loadModule(
-  '@proto/api',
+  '@cpms/api',
   '../../api_protocol_v_1_1_1.js'
 );
 

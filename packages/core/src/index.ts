@@ -1,2 +1,2 @@
-// Re-export all utilities from @proto/utils
-export * from '@proto/utils';
+// Re-export all utilities from @cpms/utils
+export * from '@cpms/utils';

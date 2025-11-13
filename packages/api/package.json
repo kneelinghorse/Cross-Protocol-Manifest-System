@@ -1,5 +1,5 @@
 {
-  "name": "@proto/api",
+  "name": "@cpms/api",
   "version": "0.4.0",
   "private": false,
   "description": "API Protocol v1.1.1 implementation for manifest-first APIs",

@@ -1,5 +1,5 @@
 {
-  "name": "@proto/data",
+  "name": "@cpms/data",
   "version": "0.4.0",
   "private": false,
   "description": "Data Protocol implementation for CPMS",
@@ -41,7 +41,7 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@proto/core": "workspace:*",
+    "@cpms/core": "workspace:*",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
     "monosize": "^0.3.0"

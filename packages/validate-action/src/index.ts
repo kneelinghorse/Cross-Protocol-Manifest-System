@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import { execFile, ExecFileException } from 'child_process';
 import { promisify } from 'util';
-import { createDataProtocol } from '@proto/data';
+import { createDataProtocol } from '@cpms/data';
 
 type Octokit = ReturnType<typeof github.getOctokit>;
 

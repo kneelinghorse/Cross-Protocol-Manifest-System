@@ -350,7 +350,7 @@ Currently not available. Project is community-supported.
 ### How do I install?
 
 \`\`\`bash
-npm install @proto/data
+npm install @cpms/data
 \`\`\`
 
 ### How do I contribute?
@@ -415,7 +415,7 @@ What actually happens.
 **Environment:**
 - OS: [e.g. macOS 14.1]
 - Node.js: [e.g. 20.10.0]
-- Package version: [e.g. @proto/data@0.4.0]
+- Package version: [e.g. @cpms/data@0.4.0]
 
 **Additional context**
 Any other context, screenshots, or error messages.
@@ -570,11 +570,11 @@ A declarative framework for defining and validating data schemas, APIs, events, 
 ## Quick Start
 
 \`\`\`bash
-npm install @proto/data
+npm install @cpms/data
 \`\`\`
 
 \`\`\`javascript
-import { createDataProtocol } from '@proto/data';
+import { createDataProtocol } from '@cpms/data';
 
 const protocol = createDataProtocol({
   dataset: { name: 'users' },

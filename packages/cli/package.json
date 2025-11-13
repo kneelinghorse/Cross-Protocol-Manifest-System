@@ -1,6 +1,6 @@
 {
-  "name": "@proto/cli",
-  "version": "0.4.0",
+  "name": "@cpms/cli",
+  "version": "0.4.1",
   "private": false,
   "description": "Proto CLI for validating, diffing, and generating manifests",
   "type": "module",
@@ -42,9 +42,7 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "dependencies": {
-    "@proto/data": "workspace:*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"

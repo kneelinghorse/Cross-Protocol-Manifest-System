@@ -3,7 +3,7 @@
 import { loadModule } from './support/load-module.js';
 
 const { createDataProtocol, createDataCatalog } = await loadModule(
-  '@proto/data',
+  '@cpms/data',
   '../../data_protocol_v_1_1_1.js'
 );
 

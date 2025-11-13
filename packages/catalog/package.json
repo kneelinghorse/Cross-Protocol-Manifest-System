@@ -1,5 +1,5 @@
 {
-  "name": "@proto/catalog",
+  "name": "@cpms/catalog",
   "version": "0.4.0",
   "private": false,
   "description": "Catalog system for URN resolution and cross-protocol analysis",

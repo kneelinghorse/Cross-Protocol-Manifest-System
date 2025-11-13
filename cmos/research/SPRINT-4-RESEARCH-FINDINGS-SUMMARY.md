@@ -25,34 +25,34 @@ This document consolidates all research findings from R4.1, R4.2, and R4.3 for q
 
 ```
 internal/
-  └── utils/          # @proto/utils (devDependency only)
+  └── utils/          # @cpms/utils (devDependency only)
 packages/
-  └── core/           # Depends on @proto/utils as devDependency
-      └── package.json: { "devDependencies": { "@proto/utils": "workspace:*" } }
+  └── core/           # Depends on @cpms/utils as devDependency
+      └── package.json: { "devDependencies": { "@cpms/utils": "workspace:*" } }
 ```
 
 **How It Works:**
-1. `pnpm add @proto/utils --filter @proto/core --save-dev`
-2. At build time, `tsup` (via esbuild) **inlines** the code from `@proto/utils` directly into `@proto/core`'s output
-3. Published `@proto/core` on npm has **zero** entries in `dependencies` block
+1. `pnpm add @cpms/utils --filter @cpms/core --save-dev`
+2. At build time, `tsup` (via esbuild) **inlines** the code from `@cpms/utils` directly into `@cpms/core`'s output
+3. Published `@cpms/core` on npm has **zero** entries in `dependencies` block
 
 ### Package Structure
 
 ```
 / (root)
 ├── internal/
-│   ├── utils/         # @proto/utils (shared code, devDep only)
-│   ├── eslint-config/ # @proto/eslint-config
-│   └── tsconfig/      # @proto/tsconfig
+│   ├── utils/         # @cpms/utils (shared code, devDep only)
+│   ├── eslint-config/ # @cpms/eslint-config
+│   └── tsconfig/      # @cpms/tsconfig
 ├── packages/
-│   ├── core/          # @proto/core (published to npm)
-│   ├── data/          # @proto/data (published to npm)
-│   ├── event/         # @proto/event (published to npm)
-│   ├── api/           # @proto/api (published to npm)
-│   ├── agent/         # @proto/agent (published to npm)
-│   ├── semantic/      # @proto/semantic (published to npm)
-│   ├── catalog/       # @proto/catalog (published to npm)
-│   └── cli/           # @proto/cli (published to npm)
+│   ├── core/          # @cpms/core (published to npm)
+│   ├── data/          # @cpms/data (published to npm)
+│   ├── event/         # @cpms/event (published to npm)
+│   ├── api/           # @cpms/api (published to npm)
+│   ├── agent/         # @cpms/agent (published to npm)
+│   ├── semantic/      # @cpms/semantic (published to npm)
+│   ├── catalog/       # @cpms/catalog (published to npm)
+│   └── cli/           # @cpms/cli (published to npm)
 ├── .changeset/        # Changesets configuration
 ├── pnpm-workspace.yaml
 ├── turbo.json
@@ -107,7 +107,7 @@ export default defineConfig({
 **packages/core/package.json (CRITICAL):**
 ```json
 {
-  "name": "@proto/core",
+  "name": "@cpms/core",
   "version": "1.0.0",
   "private": false,
   "type": "module",
@@ -133,7 +133,7 @@ export default defineConfig({
     "//": "This block MUST be empty - enforced by CI gate"
   },
   "devDependencies": {
-    "@proto/utils": "workspace:*",
+    "@cpms/utils": "workspace:*",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0"
   }
@@ -203,10 +203,10 @@ pnpm install
 turbo run build
 
 # Develop single package (watch mode)
-turbo run dev --filter=@proto/core
+turbo run dev --filter=@cpms/core
 
 # Build package and its dependencies
-turbo run build --filter=@proto/data
+turbo run build --filter=@cpms/data
 
 # Run tests with caching
 turbo run test

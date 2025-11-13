@@ -3,7 +3,7 @@
 import { loadModule } from './support/load-module.js';
 
 const { createEventProtocol } = await loadModule(
-  '@proto/event',
+  '@cpms/event',
   '../../event-protocol.js'
 );
 

@@ -42,17 +42,21 @@ function assertDeepEqual(actual, expected, message) {
 let testsRun = 0;
 let testsPassed = 0;
 let testsFailed = 0;
+let testChain = Promise.resolve();
 
 function test(name, fn) {
   testsRun++;
-  try {
-    fn();
-    testsPassed++;
-    console.log(`✓ ${name}`);
-  } catch (error) {
-    testsFailed++;
-    console.error(`✗ ${name}: ${error.message}`);
-  }
+  const task = async () => {
+    try {
+      await fn();
+      testsPassed++;
+      console.log(`✓ ${name}`);
+    } catch (error) {
+      testsFailed++;
+      console.error(`✗ ${name}: ${error.message}`);
+    }
+  };
+  testChain = testChain.then(task);
 }
 
 function describe(suiteName, fn) {
@@ -61,7 +65,11 @@ function describe(suiteName, fn) {
 }
 
 function beforeAll(fn) {
-  fn();
+  testChain = testChain.then(() => fn());
+}
+
+function afterAll(fn) {
+  testChain = testChain.then(() => fn());
 }
 
 // Test data directory
@@ -566,22 +574,24 @@ describe('URN Resolver', () => {
   describe('createURNHTTPServer', () => {
     let server;
     let serverInstance;
+    let baseUrl;
     
     beforeAll(async () => {
       server = createURNHTTPServer({
-        port: 3333,
+        port: 0,
         manifestDir: TEST_MANIFEST_DIR
       });
       serverInstance = await server.start();
+      baseUrl = serverInstance.url;
     });
-    
+
     test('should start HTTP server', () => {
-      assertEqual(serverInstance.port, 3333, 'should have correct port');
-      assertEqual(serverInstance.url, 'http://localhost:3333', 'should have correct URL');
+      assert(serverInstance.port > 0, 'should have assigned port');
+      assert(baseUrl.startsWith('http://localhost'), 'should have localhost URL');
     });
     
     test('should handle health check', async () => {
-      const response = await fetch('http://localhost:3333/health');
+      const response = await fetch(`${baseUrl}/health`);
       const data = await response.json();
       
       assertEqual(response.status, 200, 'should return 200');
@@ -589,7 +599,7 @@ describe('URN Resolver', () => {
     });
     
     test('should resolve URN via HTTP', async () => {
-      const response = await fetch('http://localhost:3333/resolve?urn=urn:proto:data:user_events@v1.1.1');
+      const response = await fetch(`${baseUrl}/resolve?urn=urn:proto:data:user_events@v1.1.1`);
       const data = await response.json();
       
       assertEqual(response.status, 200, 'should return 200');
@@ -598,7 +608,7 @@ describe('URN Resolver', () => {
     });
     
     test('should handle invalid URN parameter', async () => {
-      const response = await fetch('http://localhost:3333/resolve');
+      const response = await fetch(`${baseUrl}/resolve`);
       const data = await response.json();
       
       assertEqual(response.status, 400, 'should return 400');
@@ -606,7 +616,7 @@ describe('URN Resolver', () => {
     });
     
     test('should handle cache stats endpoint', async () => {
-      const response = await fetch('http://localhost:3333/cache/stats');
+      const response = await fetch(`${baseUrl}/cache/stats`);
       const data = await response.json();
       
       assertEqual(response.status, 200, 'should return 200');
@@ -614,7 +624,7 @@ describe('URN Resolver', () => {
     });
     
     test('should handle cache clear endpoint', async () => {
-      const response = await fetch('http://localhost:3333/cache/clear');
+      const response = await fetch(`${baseUrl}/cache/clear`);
       const data = await response.json();
       
       assertEqual(response.status, 200, 'should return 200');
@@ -636,9 +646,15 @@ describe('URN Resolver', () => {
     });
     
     test('should return 404 for unknown endpoints', async () => {
-      const response = await fetch('http://localhost:3333/unknown');
+      const response = await fetch(`${baseUrl}/unknown`);
       
       assertEqual(response.status, 404, 'should return 404');
+    });
+    
+    afterAll(async () => {
+      if (server) {
+        await server.stop();
+      }
     });
   });
 
@@ -723,15 +739,18 @@ describe('URN Resolver', () => {
   });
 });
 
-// Cleanup
-cleanupTestEnvironment();
-
-// Print test summary
-console.log('\n=== Test Summary ===');
-console.log(`Total tests: ${testsRun}`);
-console.log(`Passed: ${testsPassed}`);
-console.log(`Failed: ${testsFailed}`);
-
-if (testsFailed > 0) {
-  process.exit(1);
-}
+testChain
+  .then(() => cleanupTestEnvironment())
+  .then(() => {
+    console.log('\n=== Test Summary ===');
+    console.log(`Total tests: ${testsRun}`);
+    console.log(`Passed: ${testsPassed}`);
+    console.log(`Failed: ${testsFailed}`);
+    if (testsFailed > 0) {
+      process.exit(1);
+    }
+  })
+  .catch(error => {
+    console.error(`Test execution failed: ${error.message}`);
+    process.exit(1);
+  });

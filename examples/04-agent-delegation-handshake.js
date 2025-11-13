@@ -3,7 +3,7 @@
 import { loadModule } from './support/load-module.js';
 
 const { createAgentProtocol } = await loadModule(
-  '@proto/agent',
+  '@cpms/agent',
   '../../agent_protocol_v_1_1_1.js'
 );
 

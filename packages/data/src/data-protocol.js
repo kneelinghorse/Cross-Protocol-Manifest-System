@@ -1,4 +1,4 @@
-import { jsonCanon, dget, dset, hash, deepClone } from '@proto/core';
+import { jsonCanon, dget, dset, hash, deepClone } from '@cpms/core';
 
 /** Safe clone that handles circular references */
 function clone(x) {

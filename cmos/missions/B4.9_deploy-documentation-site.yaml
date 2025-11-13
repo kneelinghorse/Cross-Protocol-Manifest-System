@@ -1,0 +1,375 @@
+# Mission: B4.9 Deploy Documentation Site
+# Sprint: Sprint 4 - Phase 4/5 Release & Ecosystem
+
+missionId: "B4.9_deploy-documentation-site"
+version: "1.0.0"
+
+objective: |
+  Deploy Docusaurus documentation site to Cloudflare Pages (or alternative) and make it publicly accessible.
+  Configure custom domain if available, setup continuous deployment from main branch, and verify site performance.
+
+context: |
+  Documentation site is complete from B4.4:
+  - Docusaurus v3 site in docs/ directory
+  - 18 pages of content (getting started, protocols, guides, examples)
+  - Monaco playground with validation
+  - Multi-instance configuration (docs + community)
+  - Algolia search configured (needs activation)
+  
+  Site builds successfully locally with: cd docs && pnpm build
+  
+  Need to:
+  - Choose deployment platform (Cloudflare Pages recommended from R4.2)
+  - Deploy site to production
+  - Configure custom domain (optional)
+  - Setup continuous deployment
+  - Verify performance targets (Lighthouse ≥90)
+  - Make site publicly accessible
+
+successCriteria:
+  - "Site deployed and accessible at public URL"
+  - "Continuous deployment configured (auto-deploy on main branch push)"
+  - "Build succeeds without errors"
+  - "All pages load correctly"
+  - "Navigation works"
+  - "Search functional (or Algolia activation in progress)"
+  - "Performance: Lighthouse ≥85 (target 90)"
+  - "Mobile responsive verified"
+  - "Custom domain configured (if available)"
+  - "HTTPS enabled"
+
+deliverables:
+  - "Live documentation site at public URL"
+  - "Deployment configuration (Cloudflare/Vercel/Netlify)"
+  - "Continuous deployment workflow"
+  - "Performance audit report"
+  - "Public URL documented"
+
+domainFields:
+  type: "Build.Implementation.v1"
+  
+  researchFoundation:
+    - finding: "Cloudflare Pages recommended for best performance (~50ms TTFB)"
+      sourceMission: "R4.2_documentation-site-research"
+    - finding: "Documentation site complete from B4.4"
+      sourceMission: "B4.4_documentation-site"
+      
+  implementationScope:
+    coreDeliverable: "Live, publicly accessible documentation site"
+    outOfScope:
+      - "Custom domain purchase (use provided subdomain)"
+      - "Advanced CDN configuration"
+      - "Analytics setup (optional)"
+
+  orchestrationPatterns:
+    selectedPattern: "none"
+    mutuallyExclusive: true
+    configuration:
+      none:
+        enabled: true
+        notes: "Deployment is straightforward, single agent optimal"
+
+  runtimeTopology:
+    stateDirectories:
+      - "telemetry/events"
+    telemetry:
+      streamFormat: "jsonl"
+      retention: "mission"
+      requiredEvents:
+        - "platform_setup"
+        - "first_deploy"
+        - "continuous_deployment_configured"
+        - "performance_verified"
+
+  validationProtocol:
+    - validator: "Claude"
+      focus: "Deployment correctness and configuration"
+    - validator: "Gemini"
+      focus: "Performance and accessibility"
+
+  llmAsJudgeValidation:
+    enabled: true
+    validationCriteria:
+      - "Site loads without errors"
+      - "All links work (no 404s)"
+      - "Build succeeds in deployment environment"
+      - "Performance acceptable (Lighthouse ≥85)"
+
+  failureEscalation:
+    tier_1_automatic_retry:
+      conditions:
+        - "deployment_timeout"
+        - "build_failure"
+      behavior: "Retry deployment"
+    tier_4_human_escalation:
+      enforcement: "If platform credentials needed, escalate to human"
+
+  qualityGates:
+    preCommit:
+      - "Site builds locally: cd docs && pnpm build"
+      - "Build output in docs/build/ directory"
+      
+    postImplementation:
+      - "Site accessible at public URL"
+      - "All pages render correctly"
+      - "No console errors in browser"
+      - "Mobile responsive verified"
+
+  handoffContext:
+    completed:
+      - "Documentation site deployed"
+      - "Public URL available"
+    interfaces:
+      - "Site URL: [to be determined]"
+      - "Deployment platform: Cloudflare Pages (or alternative)"
+    assumptions:
+      - "Deployment platform account available"
+      - "Build succeeds without errors"
+    nextMission: "B4.10_readme-update"
+    blockers:
+      - "Blocked by B4.4_documentation-site (site must exist)"
+    researchRequired: false
+
+---
+
+# Implementation Plan
+
+## Phase 1: Platform Selection & Setup (25 minutes)
+
+### 1.1 Choose Deployment Platform
+Based on R4.2 recommendation: **Cloudflare Pages** (best performance)
+
+Alternatives if Cloudflare unavailable:
+- Vercel (excellent DX)
+- Netlify (great free tier)
+- GitHub Pages (simplest, but slower)
+
+### 1.2 Create Account
+For Cloudflare Pages:
+- Visit: https://pages.cloudflare.com/
+- Sign up (free tier)
+- Connect GitHub account
+
+For Vercel:
+- Visit: https://vercel.com
+- Sign up (free for OSS)
+
+For Netlify:
+- Visit: https://netlify.com
+- Sign up (free for OSS)
+
+### 1.3 Create Project
+**Cloudflare Pages:**
+- Click "Create a project"
+- Connect GitHub repository: kneelinghorse/Cross-Protocol-Manifest-System
+- Framework preset: Docusaurus
+- Build command: `cd docs && pnpm install && pnpm build`
+- Build output directory: `docs/build`
+- Root directory: `/` (monorepo root)
+
+**Vercel:**
+- Import Git Repository
+- Select Cross-Protocol-Manifest-System
+- Framework: Docusaurus
+- Root Directory: `docs`
+- Build Command: `pnpm build`
+- Output Directory: `build`
+
+**Netlify:**
+- Add new site
+- Import from Git
+- Build command: `cd docs && pnpm install && pnpm build`
+- Publish directory: `docs/build`
+
+## Phase 2: First Deployment (20 minutes)
+
+### 2.1 Trigger Build
+Most platforms auto-deploy on connection. If not:
+- Click "Deploy" or "Trigger deploy"
+- Monitor build logs
+- Fix any build errors
+
+### 2.2 Common Build Issues
+**pnpm not found:**
+- Add environment variable: `PNPM_VERSION=9.12.0`
+- Or use Node.js 20+ which includes corepack
+
+**Build command incorrect:**
+- Verify working directory
+- Ensure pnpm install runs first
+- Check build output path
+
+**Missing dependencies:**
+- Verify pnpm-lock.yaml committed
+- Check workspace configuration
+
+### 2.3 Verify Deployment
+Once build succeeds:
+- Platform provides URL (e.g., `proto-manifests.pages.dev`)
+- Visit URL in browser
+- Check homepage loads
+- Test navigation
+
+## Phase 3: Configure Continuous Deployment (15 minutes)
+
+### 3.1 Verify Auto-Deploy Settings
+Most platforms auto-deploy on push to main. Verify:
+- Production branch: `main`
+- Deploy on push: enabled
+- Preview deployments: enabled (for PRs)
+
+### 3.2 Test Continuous Deployment
+```bash
+# Make small change to docs
+echo "Test change" >> docs/docs/intro.md
+
+# Commit and push
+git add docs/docs/intro.md
+git commit -m "test: verify continuous deployment"
+git push origin main
+
+# Monitor platform dashboard
+# Verify new deployment triggered
+# Verify change appears on live site
+```
+
+### 3.3 Configure Preview Deployments (Optional)
+Enable preview URLs for PRs:
+- Useful for reviewing doc changes before merge
+- Most platforms enable automatically
+
+## Phase 4: Custom Domain (Optional - 20 minutes)
+
+### 4.1 If Custom Domain Available
+Example: proto-manifests.dev or cpms.dev
+
+**For Cloudflare:**
+- Add custom domain in project settings
+- Add DNS records (CNAME)
+- SSL auto-configured
+
+**For Vercel/Netlify:**
+- Similar process in domains settings
+
+### 4.2 If No Custom Domain
+Use provided subdomain:
+- Cloudflare: `[project].pages.dev`
+- Vercel: `[project].vercel.app`
+- Netlify: `[project].netlify.app`
+
+## Phase 5: Performance Verification (20 minutes)
+
+### 5.1 Run Lighthouse Audit
+```bash
+# Install Lighthouse CLI
+npm install -g lighthouse
+
+# Run audit
+lighthouse [site-url] --view
+
+# Or use web: https://pagespeed.web.dev/
+```
+
+**Target Scores:**
+- Performance: ≥85 (aim for 90)
+- Accessibility: ≥90
+- Best Practices: ≥90
+- SEO: ≥90
+
+### 5.2 Check Core Web Vitals
+- LCP (Largest Contentful Paint): <2.5s
+- FID (First Input Delay): <100ms
+- CLS (Cumulative Layout Shift): <0.1
+
+### 5.3 Mobile Testing
+Test on mobile devices or emulators:
+- iOS Safari
+- Android Chrome
+- Verify responsive design
+- Check navigation usability
+
+### 5.4 Cross-Browser Testing
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Phase 6: Documentation Update (10 minutes)
+
+### 6.1 Update Repository README
+Add link to live docs:
+```markdown
+## 📚 Documentation
+
+**Live Documentation:** https://[your-site-url]
+
+- Getting Started
+- Protocol Reference
+- Guides & Tutorials
+- API Documentation
+- Live Playground
+```
+
+### 6.2 Update Package READMEs
+For each package, add docs link:
+```markdown
+## Documentation
+
+Full documentation: https://[your-site-url]/docs/protocols/data-protocol
+```
+
+### 6.3 Commit Updates
+```bash
+git add README.md packages/*/README.md
+git commit -m "docs: add live documentation site URL"
+git push origin main
+```
+
+## Troubleshooting
+
+### Build Fails with "pnpm not found"
+Add build environment variable:
+```
+PNPM_VERSION=9.12.0
+```
+
+Or enable corepack in build settings
+
+### Build Fails with Module Errors
+Verify:
+- pnpm-lock.yaml is committed
+- pnpm-workspace.yaml is correct
+- Build command includes `pnpm install`
+
+### Site Loads But Broken Links
+- Check base URL in docusaurus.config.ts
+- Verify all internal links use correct paths
+- Test locally first
+
+### Performance Score Low
+- Check if playground is code-split properly
+- Verify images optimized
+- Check bundle size in build output
+
+## Rollback Plan
+
+If deployment fails:
+- Platform provides rollback to previous deployment
+- Or: Fix locally, commit, push (triggers new deploy)
+
+## Checklist
+
+- [ ] Deployment platform account created
+- [ ] Project connected to GitHub repo
+- [ ] Build configuration correct
+- [ ] First deployment successful
+- [ ] Site accessible at public URL
+- [ ] Continuous deployment working
+- [ ] Custom domain configured (optional)
+- [ ] Lighthouse score ≥85
+- [ ] Mobile responsive verified
+- [ ] Cross-browser tested
+- [ ] Documentation updated with URL
+- [ ] No broken links
+- [ ] HTTPS working
+

@@ -1,5 +1,5 @@
 {
-  "name": "@proto/semantic",
+  "name": "@cpms/semantic",
   "version": "0.4.0",
   "private": false,
   "description": "Semantic Protocol v3.2.0 for intent/criticality analysis and catalogs",

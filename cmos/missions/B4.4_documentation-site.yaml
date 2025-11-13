@@ -234,7 +234,7 @@ Setup JSDoc to markdown generation
 ### 3.1 Install Dependencies
 ```bash
 npm install @monaco-editor/react
-npm install @proto/core @proto/data @proto/event @proto/api
+npm install @cpms/core @cpms/data @cpms/event @cpms/api
 ```
 
 ### 3.2 Create Playground Component
@@ -242,7 +242,7 @@ npm install @proto/core @proto/data @proto/event @proto/api
 ```typescript
 import React, { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { createDataProtocol } from '@proto/data';
+import { createDataProtocol } from '@cpms/data';
 
 export default function Playground() {
   const [manifest, setManifest] = useState(DEFAULT_MANIFEST);

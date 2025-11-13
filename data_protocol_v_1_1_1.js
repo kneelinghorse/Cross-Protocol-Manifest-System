@@ -43,92 +43,82 @@ function dset(obj, path, val) {
 
 /** Safe clone that handles circular references */
 function clone(x) {
-  const seen = new WeakSet();
-  return JSON.parse(JSON.stringify(x, (key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
+  try {
+    return JSON.parse(JSON.stringify(x));
+  } catch {
+    if (typeof globalThis.structuredClone === 'function') {
+      try {
+        return structuredClone(x);
+      } catch {
+        // fall through
       }
-      seen.add(value);
     }
-    return value;
-  }));
+    const seen = new WeakSet();
+    return JSON.parse(JSON.stringify(x, (key, value) => {
+      if (typeof value === 'object' && value !== null) {
+        if (seen.has(value)) {
+          return '[Circular]';
+        }
+        seen.add(value);
+      }
+      return value;
+    }));
+  }
 }
 
 /**
  * Stable 64‑bit FNV‑1a hash of any JSON‑serializable value (hex string).
  * No deps; good enough to detect schema changes without collisions in practice.
  */
-function hash(value) {
-  // Fast path for primitives - use simple string conversion
-  if (value === null || typeof value !== 'object') {
-    const str = String(value);
-    // Use a faster hashing approach for short strings
-    let h = 2166136261;
-    const p = 16777619;
-    const len = str.length;
-    // Process in chunks of 8 characters for better performance
-    let i = 0;
-    for (; i + 8 <= len; i += 8) {
-      h ^= str.charCodeAt(i);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 1);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 2);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 3);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 4);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 5);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 6);
-      h = (h * p) >>> 0;
-      h ^= str.charCodeAt(i + 7);
-      h = (h * p) >>> 0;
-    }
-    // Process remaining characters
-    for (; i < len; i++) {
-      h ^= str.charCodeAt(i);
-      h = (h * p) >>> 0;
-    }
-    return 'fnv1a64-' + h.toString(16).padStart(16, '0');
-  }
-  
-  // For arrays, use a simple approach
-  if (Array.isArray(value)) {
-    let h = 2166136261;
-    const p = 16777619;
-    h ^= 91; // '['
-    h = (h * p) >>> 0;
-    for (let i = 0; i < value.length; i++) {
-      const itemHash = hash(value[i]);
-      // Only use first 8 chars of hash for performance
-      for (let j = 0; j < Math.min(8, itemHash.length); j++) {
-        h ^= itemHash.charCodeAt(j);
-        h = (h * p) >>> 0;
-      }
-      if (i < value.length - 1) {
-        h ^= 44; // ','
-        h = (h * p) >>> 0;
-      }
-    }
-    h ^= 93; // ']'
-    h = (h * p) >>> 0;
-    return 'fnv1a64-' + h.toString(16).padStart(16, '0');
-  }
-  
-  // For objects, use the original jsonCanon approach for correctness
-  const str = jsonCanon(value);
-  let h = 2166136261;
-  const p = 16777619;
-  
+const FNV_OFFSET = 2166136261;
+const FNV_PRIME = 16777619;
+
+function mixChar(code, h) {
+  h ^= code;
+  return (h * FNV_PRIME) >>> 0;
+}
+
+function mixString(str, h) {
   for (let i = 0; i < str.length; i++) {
-    h ^= str.charCodeAt(i);
-    h = (h * p) >>> 0;
+    h = mixChar(str.charCodeAt(i), h);
   }
-  
-  return 'fnv1a64-' + h.toString(16).padStart(16, '0');
+  return h;
+}
+
+function hash(value) {
+  function hashValue(v, h = FNV_OFFSET) {
+    if (v === null || v === undefined) {
+      return mixString(String(v), h);
+    }
+    const type = typeof v;
+    if (type === 'string' || type === 'number' || type === 'boolean' || type === 'bigint') {
+      return mixString(String(v), h);
+    }
+    if (type === 'object') {
+      if (Array.isArray(v)) {
+        h = mixChar(91, h); // '['
+        for (let i = 0; i < v.length; i++) {
+          h = hashValue(v[i], h);
+          if (i < v.length - 1) h = mixChar(44, h); // ','
+        }
+        h = mixChar(93, h); // ']'
+        return h;
+      }
+      const keys = Object.keys(v).sort();
+      h = mixChar(123, h); // '{'
+      for (const key of keys) {
+        h = mixString(key, h);
+        h = mixChar(58, h); // ':'
+        h = hashValue(v[key], h);
+        h = mixChar(44, h); // ','
+      }
+      h = mixChar(125, h); // '}'
+      return h;
+    }
+    return mixString(String(v), h);
+  }
+  const digest = hashValue(value);
+  return 'fnv1a64-' + digest.toString(16).padStart(16, '0');
 }
 
 /**
@@ -284,10 +274,20 @@ function normalize(manifest) {
   const m = clone(manifest || {});
   if (!m.schema) m.schema = {};
   if (!m.schema.fields) m.schema.fields = {};
-  // hash per field and whole schema for integrity checks
-  m.schema_hash = hash(m.schema);
   m.field_hashes = {};
-  for (const [k, v] of Object.entries(m.schema.fields)) m.field_hashes[k] = hash(v);
+  const fieldEntries = Object.entries(m.schema.fields);
+  const sortedFields = fieldEntries.map(([name, def]) => [name, def]).sort(([a], [b]) => a.localeCompare(b));
+  for (const [k, v] of sortedFields) {
+    m.field_hashes[k] = hash(v);
+  }
+  let schemaHasher = FNV_OFFSET;
+  schemaHasher = mixString(JSON.stringify(m.schema.primary_key ?? ''), schemaHasher);
+  schemaHasher = mixString(JSON.stringify(m.schema.keys ?? {}), schemaHasher);
+  for (const [name] of sortedFields) {
+    schemaHasher = mixString(name, schemaHasher);
+    schemaHasher = mixString(m.field_hashes[name], schemaHasher);
+  }
+  m.schema_hash = 'fnv1a64-' + schemaHasher.toString(16).padStart(16, '0');
   return m;
 }
 
@@ -347,7 +347,6 @@ function diff(a, b) {
     if (c.path === 'dataset.lifecycle.status' && dget(a, 'dataset.lifecycle.status') === 'active' && dget(b, 'dataset.lifecycle.status') === 'deprecated') {
       breaking.push({ ...c, reason: 'lifecycle downgrade' });
     }
-    if (c.path === 'schema_hash') breaking.push({ ...c, reason: 'schema changed' });
     // Detect required field addition as breaking
     if (c.path.startsWith('schema.fields.') && c.from === undefined && c.to && c.to.required === true) {
       breaking.push({ ...c, reason: 'required flag changed', path: c.path + '.required' });

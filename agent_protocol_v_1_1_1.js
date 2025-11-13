@@ -18,7 +18,56 @@ function jsonCanon(v){ if(v===null||typeof v!=='object') return JSON.stringify(v
 function dget(o,p){ if(!p) return o; const parts=String(p).replace(/\[(\d+)\]/g,'.$1').split('.'); let cur=o; for(const k of parts){ if(cur==null) return; cur=cur[k]; } return cur; }
 function dset(o,p,v){ const parts=String(p).split('.'); let cur=o; while(parts.length>1){ const k=parts.shift(); if(!(k in cur)||typeof cur[k]!=='object') cur[k]={}; cur=cur[k]; } cur[parts[0]]=v; }
 const clone=x=>JSON.parse(JSON.stringify(x));
-function hash(v){ const s=jsonCanon(v); let h=BigInt('0xcbf29ce484222325'); const p=BigInt('0x100000001b3'); for(let i=0;i<s.length;i++){ h^=BigInt(s.charCodeAt(i)); h=(h*p)&BigInt('0xFFFFFFFFFFFFFFFF'); } return 'fnv1a64-'+h.toString(16).padStart(16,'0'); }
+const FNV_OFFSET = 2166136261;
+const FNV_PRIME = 16777619;
+
+function mixChar(code, h) {
+  h ^= code;
+  return (h * FNV_PRIME) >>> 0;
+}
+
+function mixString(str, h) {
+  for (let i = 0; i < str.length; i++) {
+    h = mixChar(str.charCodeAt(i), h);
+  }
+  return h;
+}
+
+function hash(value) {
+  function hashValue(v, h = FNV_OFFSET) {
+    if (v === null || v === undefined || typeof v === 'number' || typeof v === 'boolean' || typeof v === 'bigint') {
+      return mixString(String(v), h);
+    }
+    if (typeof v === 'string') {
+      return mixString(v, h);
+    }
+    if (Array.isArray(v)) {
+      h = mixChar(91, h); // '['
+      for (let i = 0; i < v.length; i++) {
+        h = hashValue(v[i], h);
+        if (i < v.length - 1) h = mixChar(44, h);
+      }
+      h = mixChar(93, h); // ']'
+      return h;
+    }
+    if (typeof v === 'object') {
+      const keys = Object.keys(v).sort();
+      h = mixChar(123, h); // '{'
+      for (const key of keys) {
+        h = mixString(key, h);
+        h = mixChar(58, h); // ':'
+        h = hashValue(v[key], h);
+        h = mixChar(44, h); // ','
+      }
+      h = mixChar(125, h); // '}'
+      return h;
+    }
+    return mixString(String(v), h);
+  }
+
+  const digest = hashValue(value);
+  return 'fnv1a64-' + digest.toString(16).padStart(16, '0');
+}
 const isURN = s => typeof s==='string' && /^urn:proto:(api|data|event|ui|workflow|infra|device|ai|iam|metric|integration|testing|docs|obs|config|release|agent):[a-zA-Z0-9._-]+@[\d.]+(#[^#\s]+)?$/.test(s);
 
 // ————————————————————————————————————————————————————————————————

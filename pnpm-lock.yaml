@@ -20,6 +20,21 @@ importers:
 
   docs:
     dependencies:
+      '@cpms/agent':
+        specifier: workspace:*
+        version: link:../packages/agent
+      '@cpms/api':
+        specifier: workspace:*
+        version: link:../packages/api
+      '@cpms/data':
+        specifier: workspace:*
+        version: link:../packages/data
+      '@cpms/event':
+        specifier: workspace:*
+        version: link:../packages/event
+      '@cpms/semantic':
+        specifier: workspace:*
+        version: link:../packages/semantic
       '@docusaurus/core':
         specifier: 3.9.2
         version: 3.9.2(@docusaurus/faster@3.9.2(@docusaurus/types@3.9.2(@swc/core@1.15.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)))(@mdx-js/react@3.1.1(@types/react@19.2.2)(react@19.2.0))(@rspack/core@1.6.1)(@swc/core@1.15.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.6.3)
@@ -41,21 +56,6 @@ importers:
       '@monaco-editor/react':
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.52.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      '@proto/agent':
-        specifier: workspace:*
-        version: link:../packages/agent
-      '@proto/api':
-        specifier: workspace:*
-        version: link:../packages/api
-      '@proto/data':
-        specifier: workspace:*
-        version: link:../packages/data
-      '@proto/event':
-        specifier: workspace:*
-        version: link:../packages/event
-      '@proto/semantic':
-        specifier: workspace:*
-        version: link:../packages/semantic
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
@@ -94,7 +94,7 @@ importers:
     devDependencies:
       monosize:
         specifier: ^0.3.0
-        version: 0.3.0(@swc/core@1.15.1)
+        version: 0.3.0(@swc/core@1.15.1)(esbuild@0.25.12)
       tsup:
         specifier: ^8.0.0
         version: 8.5.0(@swc/core@1.15.1)(jiti@1.21.7)(postcss@8.5.6)(typescript@5.9.3)
@@ -106,7 +106,7 @@ importers:
     devDependencies:
       monosize:
         specifier: ^0.3.0
-        version: 0.3.0(@swc/core@1.15.1)(esbuild@0.25.12)
+        version: 0.3.0(@swc/core@1.15.1)
       tsup:
         specifier: ^8.0.0
         version: 8.5.0(@swc/core@1.15.1)(jiti@1.21.7)(postcss@8.5.6)(typescript@5.9.3)
@@ -127,10 +127,6 @@ importers:
         version: 5.9.3
 
   packages/cli:
-    dependencies:
-      '@proto/data':
-        specifier: workspace:*
-        version: link:../data
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -141,7 +137,7 @@ importers:
 
   packages/core:
     devDependencies:
-      '@proto/utils':
+      '@cpms/utils':
         specifier: workspace:*
         version: link:../../internal/utils
       monosize:
@@ -156,7 +152,7 @@ importers:
 
   packages/data:
     devDependencies:
-      '@proto/core':
+      '@cpms/core':
         specifier: workspace:*
         version: link:../core
       monosize:
@@ -207,7 +203,7 @@ importers:
       '@actions/tool-cache':
         specifier: ^2.0.1
         version: 2.0.2
-      '@proto/data':
+      '@cpms/data':
         specifier: workspace:*
         version: link:../data
     devDependencies:

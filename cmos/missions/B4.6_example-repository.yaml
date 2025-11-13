@@ -5,50 +5,42 @@ missionId: "B4.6_example-repository"
 version: "1.0.0"
 
 objective: |
-  Create comprehensive example repository demonstrating Cross-Protocol Manifest System usage in a full-stack application.
-  Provide real-world patterns, integration examples, and best practices for developers to learn from.
-  Include Docker setup, CI/CD integration, and multiple protocol types working together.
+  Create practical, runnable examples in-repo demonstrating all 5 protocols with realistic use cases.
+  Provide simple Node.js scripts that developers can run immediately to see protocols in action.
+  No external repo, Docker, or complex infrastructure - just clean, educational code.
 
 context: |
-  Example repository serves as:
-  - Learning resource for new users
-  - Reference implementation of best practices
-  - Integration testing for released packages
-  - Showcase of protocol capabilities
+  SIMPLIFIED SCOPE - No external repo, no Docker/Kafka complexity.
   
-  Should demonstrate:
-  - Data Protocol for database schemas
-  - Event Protocol for Kafka/message bus
-  - API Protocol for REST/GraphQL endpoints
-  - Agent Protocol for service capabilities
-  - Catalog System for cross-protocol analysis
-  - CLI tooling integration
-  - GitHub Action integration
-  - Docker containerization
-  - Full development workflow
+  Create examples/ directory in main repo with runnable Node.js scripts.
+  Each example demonstrates a specific protocol or pattern with:
+  - Realistic manifests
+  - Working code that runs immediately
+  - Clear comments explaining what's happening
+  - Self-contained (no external services)
   
-  Target audience: Full-stack developers evaluating the system
+  Target: Developer clones repo, runs `node examples/data-validation.js`, sees protocol in action.
+  
+  Already have: test manifests, integration tests, docs examples
+  Need: Simple runnable scripts showing practical usage patterns
 
 successCriteria:
-  - "Example repository created and functional"
-  - "All 5 core protocols demonstrated with real use cases"
-  - "Docker Compose setup for local development"
-  - "CI/CD pipeline using proto/validate-action"
-  - "README with clear setup instructions"
-  - "Multiple example manifests (10+ files)"
-  - "Integration tests demonstrating cross-protocol features"
-  - "Best practices documented"
-  - "Repository cloneable and runnable in <5 minutes"
-  - "Comprehensive comments explaining patterns"
+  - "examples/ directory created in repo"
+  - "6+ runnable scripts demonstrating all 5 protocols"
+  - "Each script runs successfully: node examples/[name].js"
+  - "Realistic manifests showing practical patterns"
+  - "Clear inline comments explaining what's happening"
+  - "examples/README.md with quick start"
+  - "No external dependencies beyond @cpms packages"
+  - "Each example self-contained and educational"
+  - "Can run examples in <1 minute from clone"
 
 deliverables:
-  - "proto-examples repository"
-  - "Example application (Node.js/Express or similar)"
-  - "10+ manifest files (data, event, API, agent, semantic)"
-  - "Docker Compose configuration"
-  - "CI/CD workflows"
-  - "README with quickstart guide"
-  - "Documentation of patterns and best practices"
+  - "examples/ directory with 6+ runnable scripts"
+  - "examples/README.md with quick start guide"
+  - "Realistic manifests for each protocol type"
+  - "Clear comments and educational value in code"
+  - "No external service dependencies"
 
 domainFields:
   type: "Build.Implementation.v1"
@@ -62,11 +54,13 @@ domainFields:
       sourceMission: "B4.5_github-action-package"
       
   implementationScope:
-    coreDeliverable: "Working example repository with comprehensive integration examples"
+    coreDeliverable: "In-repo examples/ directory with 6+ practical, runnable scripts"
     outOfScope:
-      - "Production-ready application (this is for learning)"
-      - "Advanced deployment strategies (keep it simple)"
-      - "Multiple language examples (JavaScript only for v1)"
+      - "External proto-examples repository"
+      - "Docker/Kafka/Express infrastructure"
+      - "Complex multi-service setup"
+      - "CI/CD workflow examples (already in repo)"
+      - "Production-ready application code"
 
   orchestrationPatterns:
     selectedPattern: "none"
@@ -148,58 +142,26 @@ domainFields:
 
 # Implementation Plan
 
-## Phase 1: Repository Setup (30 minutes)
+## Phase 1: Setup examples/ Directory (15 minutes)
 
-### 1.1 Create Repository
+### 1.1 Create Structure
 ```bash
-# On GitHub
-# Create: proto-examples
-# Description: Example applications using Cross-Protocol Manifest System
-
-git clone https://github.com/[org]/proto-examples.git
-cd proto-examples
+mkdir -p examples/manifests
 ```
 
-### 1.2 Initialize Project
-```bash
-npm init -y
-npm install @proto/data @proto/event @proto/api @proto/agent @proto/cli
-npm install --save-dev @types/node typescript
-```
+### 1.2 Examples to Create
+1. `examples/01-data-validation.js` - Load manifest, validate, show PII detection
+2. `examples/02-breaking-changes.js` - Diff two manifests, detect breaking changes
+3. `examples/03-api-sdk-preview.js` - Show SDK generation from API manifest
+4. `examples/04-agent-capabilities.js` - URN linking, capability matching
+5. `examples/05-catalog-analysis.js` - Load multiple manifests, detect cycles
+6. `examples/06-full-workflow.js` - End-to-end validation → diff → generate
+7. `examples/README.md` - Quick start guide
 
-### 1.3 Project Structure
-```
-proto-examples/
-├── src/
-│   ├── api/              # Example API service
-│   ├── events/           # Event producers/consumers
-│   ├── data/             # Database integration
-│   └── agents/           # Agent examples
-├── manifests/
-│   ├── data/             # Data Protocol manifests
-│   ├── events/           # Event Protocol manifests
-│   ├── api/              # API Protocol manifests
-│   └── agents/           # Agent Protocol manifests
-├── docker/
-│   ├── docker-compose.yml
-│   └── Dockerfile
-├── .github/workflows/
-│   └── validate.yml
-├── tests/
-│   └── integration.test.js
-├── README.md
-└── package.json
-```
+## Phase 2: Create Example Scripts (60 minutes)
 
-## Phase 2: Example Application (90 minutes)
-
-### 2.1 Example Use Case
-E-commerce order processing system:
-- User service (Data Protocol)
-- Order events (Event Protocol)  
-- Checkout API (API Protocol)
-- Fraud detection agent (Agent Protocol)
-- Semantic analysis (Semantic Protocol)
+### 2.1 Example 01: Data Validation
+`examples/01-data-validation.js` - Demonstrates Data Protocol basics
 
 ### 2.2 Data Protocol Example
 `manifests/data/users.json`:
@@ -312,7 +274,7 @@ Simple Express app demonstrating protocol usage:
 ```javascript
 // src/api/server.js
 import express from 'express';
-import { createAPIProtocol } from '@proto/api';
+import { createAPIProtocol } from '@cpms/api';
 import manifest from '../../manifests/api/checkout-api.json' assert { type: 'json' };
 
 const api = createAPIProtocol(manifest);
@@ -474,9 +436,9 @@ Create `docs/patterns.md` explaining:
 // tests/integration.test.js
 import { describe, test } from 'node:test';
 import assert from 'node:assert';
-import { createDataProtocol } from '@proto/data';
-import { createEventProtocol } from '@proto/event';
-import { createAPICatalog } from '@proto/api';
+import { createDataProtocol } from '@cpms/data';
+import { createEventProtocol } from '@cpms/event';
+import { createAPICatalog } from '@cpms/api';
 
 describe('Integration Tests', () => {
   test('manifests validate successfully', async () => {

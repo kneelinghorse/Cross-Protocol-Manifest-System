@@ -8,5 +8,5 @@ export default defineConfig({
   clean: true,
   treeshake: true,
   minify: true,
-  noExternal: ['@proto/core']
+  noExternal: ['@cpms/core']
 });

@@ -13,7 +13,7 @@ overview='examples/01-data-quality-guardrails.js'
 node "$overview"
 ```
 
-All scripts assume the workspace packages (e.g., `@proto/data`) are built, which happens as part of `pnpm install`. No network calls or external services are required.
+All scripts assume the workspace packages (e.g., `@cpms/data`) are built, which happens as part of `pnpm install`. No network calls or external services are required.
 
 ## Script Index
 
@@ -30,4 +30,4 @@ All scripts assume the workspace packages (e.g., `@proto/data`) are built, which
 
 - Scripts stream helpful commentary to stdout; pipe through `less -R` if you want pagination.
 - To compare outputs between revisions, capture logs via `node examples/03-api-contract-snapshot.js > /tmp/api.log`.
-- Extend any scenario by importing additional `@proto/*` packages—everything stays zero-dependency.
+- Extend any scenario by importing additional `@cpms/*` packages—everything stays zero-dependency.

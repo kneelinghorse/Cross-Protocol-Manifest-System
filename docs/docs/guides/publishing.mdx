@@ -1,14 +1,14 @@
 ---
 id: publishing-runbook
 title: npm Publishing Runbook
-description: Step-by-step instructions for releasing the @proto packages.
+description: Step-by-step instructions for releasing the @cpms packages.
 ---
 
 This guide summarizes Mission B4.3's publish process. Ownership of the npm org stays with **@kneelinghorse**.
 
 ## Prerequisites
 
-1. Create the `@proto` npm org and invite maintainers.
+1. Create the `@cpms` npm org and invite maintainers.
 2. Generate an **automation** npm access token and store it as `NPM_TOKEN` in GitHub secrets.
 3. Optionally add `GH_PAT_RELEASE` for bot comments in release PRs.
 
@@ -28,7 +28,7 @@ Use `pnpm test:workspace` when you need per-package test runs.
 1. `pnpm changeset` – select affected packages, choose version bumps, commit the generated markdown.
 2. Push to `main` – the `Release Packages` workflow opens/updates a release PR via `changesets/action`.
 3. Merge the PR – CI runs `pnpm changeset publish` to tag + publish packages.
-4. Verify on npm: `npm view @proto/core version`, etc.
+4. Verify on npm: `npm view @cpms/core version`, etc.
 
 Manual fallback:
 
@@ -44,13 +44,13 @@ pnpm changeset publish
 rm -rf /tmp/proto-test && mkdir -p /tmp/proto-test
 cd /tmp/proto-test
 npm init -y
-npm install @proto/core @proto/data
-node -e "const { createDataProtocol } = require('@proto/data'); console.log('ok', !!createDataProtocol);"
+npm install @cpms/core @cpms/data
+node -e "const { createDataProtocol } = require('@cpms/data'); console.log('ok', !!createDataProtocol);"
 ```
 
 ## Rollback Plan
 
-1. `npm unpublish @proto/<pkg>@<version> --force` (within 24 hours).
+1. `npm unpublish @cpms/<pkg>@<version> --force` (within 24 hours).
 2. Fix the issue + bump via `pnpm changeset`.
 3. Run `pnpm version-packages` and `pnpm release` or let CI publish.
 

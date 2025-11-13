@@ -22,7 +22,7 @@ const FeatureList: FeatureItem[] = [
     title: 'Zero-Dependency Protocols',
     body: (
       <>
-        Packages such as <code>@proto/data</code> and <code>@proto/api</code>{' '}
+        Packages such as <code>@cpms/data</code> and <code>@cpms/api</code>{' '}
         inline all helpers at build time, making security reviews and air-gapped
         deployments painless.
       </>

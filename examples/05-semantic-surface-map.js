@@ -3,7 +3,7 @@
 import { loadModule } from './support/load-module.js';
 
 const { createSemanticProtocol, createSemanticCatalog } = await loadModule(
-  '@proto/semantic',
+  '@cpms/semantic',
   '../../packages/semantic/src/semantic-protocol.js'
 );
 

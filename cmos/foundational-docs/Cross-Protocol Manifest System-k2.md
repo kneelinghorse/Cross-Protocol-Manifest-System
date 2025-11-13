@@ -304,7 +304,7 @@ users.match('governance.policy.classification:=:pii') // true
 ### 11) Deployment & Release
 
 **Deployment Architecture:**
-- **npm Packages**: Publish each protocol as `@proto/{data,event,api,agent,semantic}` + `@proto/cli`
+- **npm Packages**: Publish each protocol as `@cpms/{data,event,api,agent,semantic}` + `@cpms/cli`
 - **Monorepo Structure**: Lerna/Nx for coordination; each protocol is standalone
 - **Static Hosting**: Manifests served from S3/GitHub Pages for discovery
 - **Serverless Option**: Lambda@Edge for URN resolution and semantic similarity queries
@@ -451,8 +451,8 @@ Create the **universal system of record for modern software architecture**—a m
 **Goal:** Deliver the core pattern and first working protocol.
 
 **Deliverables:**
-- `@proto/core` package (utilities, validator registry)
-- `@proto/data` package (Data Protocol v1.1.1)
+- `@cpms/core` package (utilities, validator registry)
+- `@cpms/data` package (Data Protocol v1.1.1)
 - `proto` CLI with `validate` and `diff` commands
 - GitHub repo with MIT license and contributor guide
 
@@ -475,8 +475,8 @@ Create the **universal system of record for modern software architecture**—a m
 **Goal:** Expand to event-driven and API-first use cases.
 
 **Deliverables:**
-- `@proto/event` package (Event Protocol v1.1.1)
-- `@proto/api` package (API Protocol v1.1.1)
+- `@cpms/event` package (Event Protocol v1.1.1)
+- `@cpms/api` package (API Protocol v1.1.1)
 - `proto` CLI with `generate sdk` and `generate tests`
 - DataCatalog and EventCatalog implementations
 
@@ -499,8 +499,8 @@ Create the **universal system of record for modern software architecture**—a m
 **Goal:** Enable system-wide analysis and linking.
 
 **Deliverables:**
-- `@proto/catalog` package (combined analysis engine)
-- `@proto/agent` package (Agent Protocol v1.1.1)
+- `@cpms/catalog` package (combined analysis engine)
+- `@cpms/agent` package (Agent Protocol v1.1.1)
 - URN resolver service (static or serverless)
 - CLI `query` and `graph` commands
 
@@ -523,7 +523,7 @@ Create the **universal system of record for modern software architecture**—a m
 **Goal:** Add analytical capabilities and self-enrichment.
 
 **Deliverables:**
-- `@proto/semantic` package (Protocol v3.2.0)
+- `@cpms/semantic` package (Protocol v3.2.0)
 - Semantic vector computation engine
 - Similarity discovery in catalogs
 - Agent Card generator
@@ -554,7 +554,7 @@ Create the **universal system of record for modern software architecture**—a m
 
 **Tools/Features:**
 ```
-- npm install -g @proto/cli
+- npm install -g @cpms/cli
 - uses: proto/validate-action@v1
 - docker run -v $(pwd):/manifests proto/cli validate --glob="**/*.json"
 ```
@@ -600,7 +600,7 @@ Create the **universal system of record for modern software architecture**—a m
 
 ```bash
 # Install CLI
-npm install -g @proto/cli
+npm install -g @cpms/cli
 
 # Initialize a manifest from your database
 proto init --from=postgres://localhost/mydb > data.users.json

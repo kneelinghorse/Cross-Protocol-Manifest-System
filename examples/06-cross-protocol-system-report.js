@@ -3,15 +3,15 @@
 import { loadModule } from './support/load-module.js';
 
 const { createDataProtocol } = await loadModule(
-  '@proto/data',
+  '@cpms/data',
   '../../data_protocol_v_1_1_1.js'
 );
 const { createApiProtocol } = await loadModule(
-  '@proto/api',
+  '@cpms/api',
   '../../api_protocol_v_1_1_1.js'
 );
 const { createCatalogSystem } = await loadModule(
-  '@proto/catalog',
+  '@cpms/catalog',
   '../../catalog_system_v_1_1_1.js'
 );
 
