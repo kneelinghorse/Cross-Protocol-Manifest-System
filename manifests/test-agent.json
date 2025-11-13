@@ -9,6 +9,25 @@
   "capabilities": {
     "tools": ["refund", "escalate", "lookup_order"]
   },
+  "schema": {
+    "fields": [
+      {
+        "name": "ticket_id",
+        "type": "string",
+        "description": "Stable identifier for the support ticket"
+      },
+      {
+        "name": "intent",
+        "type": "string",
+        "description": "Predicted reason for contacting support"
+      },
+      {
+        "name": "priority",
+        "type": "string",
+        "description": "Current ticket priority label"
+      }
+    ]
+  },
   "dependencies": {
     "requires": [
       "urn:proto:api:billing@v2.0.0",
