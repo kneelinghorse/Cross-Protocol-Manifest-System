@@ -7,7 +7,7 @@ A zero-dependency, manifest-first protocol framework that treats every dataset, 
 
 > **The manifest is the source of truth. Everything else is a derived artifact.**
 
-**Live docs:** https://cpms-docs.pages.dev · **npm org:** https://www.npmjs.com/org/cpms · **Examples:** [examples/](examples) · **Issues:** https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/issues · **License:** [MIT](LICENSE)
+**Live docs:** https://cross-protocol-manifest-system.pages.dev/ · **npm org:** https://www.npmjs.com/org/cpms · **Examples:** [examples/](examples) · **Issues:** https://github.com/kneelinghorse/Cross-Protocol-Manifest-System/issues · **License:** [MIT](LICENSE)
 
 ## Why CPMS?
 - **Declarative everywhere** – manifests describe reality once, then power validation, SDK generation, docs, and telemetry.
